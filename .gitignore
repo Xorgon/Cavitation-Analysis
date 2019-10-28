@@ -1,0 +1,9 @@
+# Spyder
+.spyproject/*
+
+# Cached files
+__pycache__*
+*.pyc
+
+# PyCharm
+.idea/*
