@@ -8,6 +8,7 @@ from scipy.optimize import curve_fit
 import numerical.util.gen_utils as gen
 import numerical.bem as bem
 import matplotlib.pyplot as plt
+from common.util.plotting_utils import plot_3d_point_sets
 import os
 import common.util.file_utils as file
 import scipy.sparse
@@ -32,9 +33,10 @@ if not os.path.exists("model_outputs/slot_ms/{0}".format(n)) and full_log:
 if not os.path.exists("model_outputs/slot".format(n)) and save_to_file:
     os.makedirs("model_outputs/slot".format(n))
 
-centroids, normals, areas = gen.gen_slot(n=n, h=h, w=w, length=50, depth=50)
+centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50, w_thresh=max(ps),
+                                                density_ratio=0.25)
 print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
-# pu.plot_3d_point_sets([centroids])
+plot_3d_point_sets([centroids])
 R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
 # print(sys.getsizeof(R_matrix))
 # R_matrix = scipy.sparse.csc_matrix(R_matrix)
