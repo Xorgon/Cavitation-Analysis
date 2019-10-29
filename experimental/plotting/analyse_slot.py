@@ -59,7 +59,8 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     # prediction_files = ['w2h3y5.5_bem_slot_prediction_20000',
     #                     'w2h3y5.5_bem_slot_prediction_15000',
     #                     'w2h3y5.5_bem_slot_prediction_10000']
-    prediction_files = ['w2.20h2.90q3.68_bem_slot_prediction_20000']
+    prediction_file_dir = "../../numerical/models/model_outputs/slot/"
+    prediction_files = ['w2.20h2.90q3.68_bem_slot_prediction_5000']
     # prediction_files = []
 
     dirs = []
@@ -309,7 +310,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         for i, f_name in enumerate(prediction_files):
             predicted_xs = []
             predicted_theta_js = []
-            f = open(f"slot_predictions/{f_name}.csv")
+            f = open(f"{prediction_file_dir}{f_name}.csv")
             for line in f.readlines():
                 split = line.strip().split(",")
                 predicted_xs.append(float(split[0]))
