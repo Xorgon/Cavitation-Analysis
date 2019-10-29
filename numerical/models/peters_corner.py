@@ -45,15 +45,17 @@ def get_peters_corner_jet_dir(sink_pos, peters_n):
 
 
 theta_j_sweeps = {}
-n = 20000
+n = 15000
 dist = 5
 m_0 = 1
 n_theta_bs = 30
-normalize = True
+normalize = False
 
 colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 color_idx = 0
-for peters_n in np.arange(2, 9, 2):
+for peters_n in np.arange(2, 6, 1):
+    label = "Peters n=" + str(peters_n)
+    print("Testing", label)
     corner_angle = math.pi / peters_n
     theta_bs = np.linspace(0.1, corner_angle - 0.1, n_theta_bs)
     # centroids, normals, areas = gen.gen_varied_corner(n, length=50, angle=corner_angle, depth=50, density_ratio=0.25,
@@ -66,8 +68,6 @@ for peters_n in np.arange(2, 9, 2):
     R_matrix = bem.get_R_matrix(centroids, normals, areas)
     R_inv = inv(R_matrix)
 
-    label = "Peters n=" + str(peters_n)
-    print("Testing", label)
     color = colors[color_idx]
     color_idx += 1
     theta_j_sweeps[label] = [theta_bs, [], [], color, corner_angle]  # theta_bs, theta_j numerical, theta_j Peters
