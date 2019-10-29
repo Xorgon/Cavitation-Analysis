@@ -54,7 +54,7 @@ normalize = False
 colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 color_idx = 0
 for peters_n in np.arange(2, 6, 1):
-    label = "Peters n=" + str(peters_n)
+    label = "Angle = $\\pi / " + str(peters_n) + "$"
     print("Testing", label)
     corner_angle = math.pi / peters_n
     theta_bs = np.linspace(0.1, corner_angle - 0.1, n_theta_bs)
