@@ -106,6 +106,7 @@ for peters_n in np.arange(2, 6, 1):
 
     theta_j_sweeps[label][0] /= corner_angle
 
+pu.initialize_plt()
 fig = plt.figure()
 fig.patch.set_facecolor('white')
 ax = plt.gca()
