@@ -69,8 +69,8 @@ print("    theta_b =", theta_b)
 bubble_x = bubble_dist * math.cos(theta_b)
 bubble_y = bubble_dist * math.sin(theta_b)
 
-sigma, R_b = bem.calculate_sigma([bubble_x, bubble_y, 0], centroids, normals, areas, m_0=m_0, R_inv=R_inv,
-                                 ret_R_b=True)
+R_b = bem.get_R_vector([bubble_x, bubble_y, 0], centroids, normals)
+sigma = bem.calculate_sigma([bubble_x, bubble_y, 0], centroids, normals, areas, m_0=m_0, R_inv=R_inv, R_b=R_b)
 
 corner_elements = get_corner_elements([bubble_x, bubble_y], peters_n)
 

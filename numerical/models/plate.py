@@ -22,8 +22,7 @@ q = 2
 m_0 = 1
 theta_js = []
 for p in ps:
-    res_vel, sigma, R_b = bem.get_jet_dir_and_sigma([p, q, 0], centroids, normals, areas, m_0=m_0, R_inv=R_inv,
-                                                    ret_R_b=True)
+    res_vel, sigma = bem.get_jet_dir_and_sigma([p, q, 0], centroids, normals, areas, m_0=m_0, R_inv=R_inv)
     theta_j = math.atan2(res_vel[1], res_vel[0]) + math.pi / 2
     theta_js.append(theta_j)
 

@@ -77,8 +77,8 @@ for peters_n in np.arange(2, 6, 1):
         y = dist * math.sin(theta_b)
 
         # Numerical theta_j
-        res_vel, sigma, R_b = bem.get_jet_dir_and_sigma([x, y, 0], centroids, normals, areas, m_0, R_inv=R_inv,
-                                                        ret_R_b=True)
+        R_b = bem.get_R_vector([x, y, 0], centroids, normals)
+        res_vel, sigma = bem.get_jet_dir_and_sigma([x, y, 0], centroids, normals, areas, m_0, R_inv=R_inv, R_b=R_b)
         print("        max_res =", np.max(np.abs(R_b + np.dot(R_matrix, sigma))))
         sigma_and_bubble = np.append(sigma, 1)
         # pu.plot_3d_points(centroids + [[x, y, 0]],

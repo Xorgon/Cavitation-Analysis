@@ -4,6 +4,7 @@ from memory_profiler import profile
 import numerical.util.gen_utils as gen
 import common.util.plotting_utils as pu
 from numerical.util.linalg import gauss_seidel
+import scipy.linalg
 
 
 def get_vel(point, centroids, areas, source_densities, bubble_pos=None, m_0=1):
@@ -68,33 +69,25 @@ def get_R_vector(point, centroids, normals):
     return res_mat
 
 
-def calculate_sigma(bubble_pos, centroids, normals, areas, m_0, R_inv=None, ret_R_b=False):
-    R_b = get_R_vector(bubble_pos, centroids, normals)
+def calculate_sigma(bubble_pos, centroids, normals, areas, m_0, R_inv=None, R_b=None) -> np.ndarray:
+    if R_b is None:
+        R_b = get_R_vector(bubble_pos, centroids, normals)
 
     if R_inv is None:
         R = get_R_matrix(centroids, normals, areas)
-        sigma = gauss_seidel(R, -m_0 * R_b, max_res=1e-12)
-        # sigma = linalg.solve(R, m_0 * R_b)
+        # sigma = gauss_seidel(R, -m_0 * R_b, max_res=1e-12)
+        sigma = scipy.linalg.solve(R, -m_0 * R_b)  # Faster to do this than inverting the matrix
     else:
         sigma = -m_0 * np.dot(R_inv, R_b)
 
-    if ret_R_b:
-        return sigma, R_b
-    else:
-        return sigma
+    return sigma
 
 
-def get_jet_dir_and_sigma(bubble_pos, centroids, normals, areas, m_0=1, R_inv=None, ret_R_b=False):
-    if ret_R_b:
-        sigma, R_b = calculate_sigma(bubble_pos, centroids, normals, areas, m_0, R_inv, ret_R_b)
-    else:
-        sigma = calculate_sigma(bubble_pos, centroids, normals, areas, m_0, R_inv, ret_R_b)
+def get_jet_dir_and_sigma(bubble_pos, centroids, normals, areas, m_0=1, R_inv=None, R_b=None) \
+        -> [np.ndarray, np.ndarray]:
+    sigma = calculate_sigma(bubble_pos, centroids, normals, areas, m_0, R_inv, R_b)
     vel = get_vel(bubble_pos, centroids, areas, sigma)
-
-    if ret_R_b:
-        return vel, sigma, R_b
-    else:
-        return vel, sigma
+    return vel, sigma
 
 
 def test_run_analysis():
