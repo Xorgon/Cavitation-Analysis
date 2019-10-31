@@ -1,5 +1,6 @@
 import itertools as it
 import math
+import warnings
 
 import numpy as np
 
@@ -124,10 +125,14 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     :param w: Slot width
     :param length: Geometry length
     :param depth: Geometry depth
-    :param w_thresh: w threshold at which to reduce density
+    :param w_thresh: w threshold at which to reduce density (density reduced starting after position w * w_thresh)
     :param density_ratio: Ratio of densities
     :return: centroids, normals, areas
     """
+    if w * w_thresh > length:
+        warnings.warn("w threshold too high, reverting to gen_slot")
+        return gen_slot(n, h, w, length, depth)
+
     centroids = []
     normals = []
     areas = []
