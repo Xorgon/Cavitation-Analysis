@@ -1,4 +1,5 @@
 import numpy as np
+import math
 from memory_profiler import profile
 
 import numerical.util.gen_utils as gen
@@ -90,6 +91,15 @@ def get_jet_dir_and_sigma(bubble_pos, centroids, normals, areas, m_0=1, R_inv=No
     return vel, sigma
 
 
+def get_jet_dirs(bubble_pos_list, centroids, normals, areas, m_0=1, R_inv=None, R_b=None):
+    vels = np.empty((len(bubble_pos_list), 3))
+
+    for i, pos in enumerate(bubble_pos_list):
+        vels[i] = get_jet_dir_and_sigma(pos, centroids, normals, areas, m_0=m_0, R_inv=R_inv, R_b=R_b)[0]
+
+    return vels
+
+
 def test_run_analysis():
     centroids, normals, areas = gen.gen_slot(500)
     print(len(centroids))
@@ -100,10 +110,12 @@ def test_run_analysis():
     R_mat = get_R_matrix(centroids, normals, areas)
     R_inv = np.linalg.inv(R_mat)
     source_densities = m_0 * np.dot(R_inv, R_b)
-    pu.plot_3d_points(centroids, source_densities)
-    print(source_densities)
-    res_vel = get_vel(bubble, centroids, areas, source_densities, m_0)
+    # pu.plot_3d_points(centroids, source_densities)
+    # print(source_densities)
+    res_vel = get_vel(bubble, centroids, areas, source_densities, m_0=m_0)
     print("Resultant velocity = ", res_vel)
+    assert (np.all([math.isclose(res_vel[0], 0, abs_tol=1e-16), math.isclose(res_vel[2], 0, abs_tol=1e-16)]))
+    assert (res_vel[1] > 0)
 
 
 if __name__ == "__main__":

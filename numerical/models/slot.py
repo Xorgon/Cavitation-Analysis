@@ -10,13 +10,13 @@ import common.util.file_utils as file
 import scipy.sparse
 
 # ps = [8]
-w = 2.2
-q = 3.68
-h = 2.9
-ps = np.linspace(-10 * w / 2, 10 * w / 2, 500)
+w = 4.2
+q = 2.43
+h = 11.47
+ps = np.linspace(-6 * w / 2, 6 * w / 2, 500)
 
-save_to_file = True
-calculate_error = True
+save_to_file = False
+calculate_error = False
 
 m_0 = 1
 n = 5000
@@ -24,10 +24,11 @@ n = 5000
 if not os.path.exists("model_outputs/slot".format(n)) and save_to_file:
     os.makedirs("model_outputs/slot".format(n))
 
-centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50, w_thresh=max(ps),
+# centroids, normals, areas = gen.gen_slot(n=n, h=h, w=w, length=50, depth=50)
+centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50, w_thresh=6,
                                                 density_ratio=0.25)
 print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
-plot_3d_point_sets([centroids])
+# plot_3d_point_sets([centroids])
 R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
 R_inv = scipy.linalg.inv(R_matrix)
 
@@ -35,21 +36,27 @@ condition_number_1 = np.linalg.norm(R_inv, 1) * np.linalg.norm(R_matrix, 1)
 condition_number_inf = np.linalg.norm(R_inv, np.inf) * np.linalg.norm(R_matrix, np.inf)
 print(f"Condition numbers: 1 norm = {condition_number_1}, inf norm = {condition_number_inf}")
 
-theta_js = []
-counter = 0
-for p in ps:
-    # print("Testing p =", p)
-    R_b = bem.get_R_vector([p, q, 0], centroids, normals)
-    res_vel, sigma = bem.get_jet_dir_and_sigma([p, q, 0], centroids, normals, areas, m_0=m_0, R_inv=R_inv, R_b=R_b)
-    theta_j = math.atan2(res_vel[1], res_vel[0]) + math.pi / 2
-    theta_js.append(theta_j)
-    # print("        theta_j =", theta_j)
+if calculate_error:
+    theta_js = []
+    for p in ps:
+        print("Testing p =", p)
+        R_b = bem.get_R_vector([p, q, 0], centroids, normals)
+        res_vel, sigma = bem.get_jet_dir_and_sigma([p, q, 0], centroids, normals, areas, m_0=m_0, R_inv=R_inv, R_b=R_b)
+        theta_j = math.atan2(res_vel[1], res_vel[0]) + math.pi / 2
+        theta_js.append(theta_j)
+        print("        theta_j =", theta_j)
 
-    if calculate_error:
         residual = np.abs(m_0 * R_b + np.dot(R_matrix, sigma))
         max_err = condition_number_inf * np.linalg.norm(residual, np.inf) / np.linalg.norm(m_0 * R_b, np.inf)
         print(f"        Max res = {np.max(residual):.3e}, Mean res = {np.mean(residual):.3e},"
               f" Max err = {max_err:.3e}")
+else:
+    points = np.empty((len(ps), 3))
+    points[:, 0] = ps
+    points[:, 1] = q
+    points[:, 2] = 0
+    vels = bem.get_jet_dirs(points, centroids, normals, areas, m_0, R_inv)
+    theta_js = np.arctan2(vels[:, 1], vels[:, 0]) + 0.5 * np.pi
 
 fig = plt.figure()
 fig.patch.set_facecolor('white')
