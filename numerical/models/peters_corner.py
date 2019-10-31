@@ -44,8 +44,19 @@ def get_peters_corner_jet_dir(sink_pos, peters_n):
     return eu.get_all_vel_3d(elements, sink_pos[0], sink_pos[1], 0)
 
 
+def vel_to_angle(vel):
+    angle = -math.atan2(vel[1], vel[0]) - math.pi / 2
+    if angle < 0 and theta_b > corner_angle / 2:
+        angle += 2 * math.pi
+    if angle > math.pi and theta_b < corner_angle / 2:
+        angle -= 2 * math.pi
+    if normalize:
+        angle /= math.pi - corner_angle
+    return angle
+
+
 theta_j_sweeps = {}
-n = 15000
+n = 5000
 dist = 5
 m_0 = 1
 n_theta_bs = 30
@@ -53,19 +64,19 @@ normalize = False
 
 colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
 color_idx = 0
-for peters_n in np.arange(2, 6, 1):
+for peters_n in np.arange(2, 5, 2):
     label = "Angle = $\\pi / " + str(peters_n) + "$"
     print("Testing", label)
     corner_angle = math.pi / peters_n
     theta_bs = np.linspace(0.1, corner_angle - 0.1, n_theta_bs)
-    # centroids, normals, areas = gen.gen_varied_corner(n, length=50, angle=corner_angle, depth=50, density_ratio=0.25,
-    #                                                   thresh=2 * dist)
-    centroids, normals, areas = gen.gen_corner(n, length=50, angle=corner_angle, depth=50)
+    centroids, normals, areas = gen.gen_varied_corner(n, length=50, angle=corner_angle, depth=50, density_ratio=0.25,
+                                                      thresh=2 * dist)
+    # centroids, normals, areas = gen.gen_corner(n, length=50, angle=corner_angle, depth=50)
     # pu.plot_3d_point_sets([centroids])
     # print(normals)
     # print(areas)
     print("Creating R matrix")
-    R_matrix = bem.get_R_matrix(centroids, normals, areas)
+    R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float64)
     R_inv = inv(R_matrix)
 
     condition_number_1 = np.linalg.norm(R_inv, 1) * np.linalg.norm(R_matrix, 1)
@@ -85,28 +96,11 @@ for peters_n in np.arange(2, 6, 1):
         res_vel, sigma = bem.get_jet_dir_and_sigma([x, y, 0], centroids, normals, areas, m_0, R_inv=R_inv, R_b=R_b)
         print("        max_res =", np.max(np.abs(R_b + np.dot(R_matrix, sigma))))
         sigma_and_bubble = np.append(sigma, 1)
-        # pu.plot_3d_points(centroids + [[x, y, 0]],
-        #                   np.log10(np.abs(sigma_and_bubble)) * sigma_and_bubble / np.abs(sigma_and_bubble))
-
-        theta_j = -math.atan2(res_vel[1], res_vel[0]) - math.pi / 2
-        if theta_j < 0 and theta_b > corner_angle / 2:
-            theta_j += 2 * math.pi
-        if theta_j > math.pi and theta_b < corner_angle / 2:
-            theta_j -= 2 * math.pi
-        if normalize:
-            theta_j /= math.pi - corner_angle
-        theta_j_sweeps[label][1].append(theta_j)
+        theta_j_sweeps[label][1].append(vel_to_angle(res_vel))
 
         # Analytic theta_j
         res_vel = get_peters_corner_jet_dir([x, y], peters_n)
-        theta_j = -math.atan2(res_vel[1], res_vel[0]) - math.pi / 2
-        if theta_j < 0 and theta_b > corner_angle / 2:
-            theta_j += 2 * math.pi
-        if theta_j > math.pi and theta_b < corner_angle / 2:
-            theta_j -= 2 * math.pi
-        if normalize:
-            theta_j /= math.pi - corner_angle
-        theta_j_sweeps[label][2].append(theta_j)
+        theta_j_sweeps[label][2].append(vel_to_angle(res_vel))
 
     theta_j_sweeps[label][0] /= corner_angle
 
