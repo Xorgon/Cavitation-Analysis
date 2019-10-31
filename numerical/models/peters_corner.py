@@ -68,6 +68,10 @@ for peters_n in np.arange(2, 6, 1):
     R_matrix = bem.get_R_matrix(centroids, normals, areas)
     R_inv = inv(R_matrix)
 
+    condition_number_1 = np.linalg.norm(R_inv, 1) * np.linalg.norm(R_matrix, 1)
+    condition_number_inf = np.linalg.norm(R_inv, np.inf) * np.linalg.norm(R_matrix, np.inf)
+    print(f"Condition numbers: 1 norm = {condition_number_1}, inf norm = {condition_number_inf}")
+
     color = colors[color_idx]
     color_idx += 1
     theta_j_sweeps[label] = [theta_bs, [], [], color, corner_angle]  # theta_bs, theta_j numerical, theta_j Peters

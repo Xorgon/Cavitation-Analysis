@@ -22,7 +22,7 @@ ps = np.linspace(-10 * w / 2, 10 * w / 2, 500)
 save_to_file = True
 full_log = False
 plot_fitted_function = False
-calculate_error = False
+calculate_error = True
 
 m_0 = 1
 n = 5000
@@ -43,8 +43,9 @@ R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
 # print(sys.getsizeof(R_matrix))
 R_inv = scipy.linalg.inv(R_matrix)
 
-# condition_number = np.linalg.norm(R_inv, np.inf) * np.linalg.norm(R_matrix, np.inf)
-# print(f"Condition number = {condition_number}")
+condition_number_1 = np.linalg.norm(R_inv, 1) * np.linalg.norm(R_matrix, 1)
+condition_number_inf = np.linalg.norm(R_inv, np.inf) * np.linalg.norm(R_matrix, np.inf)
+print(f"Condition numbers: 1 norm = {condition_number_1}, inf norm = {condition_number_inf}")
 
 theta_js = []
 counter = 0
@@ -56,12 +57,12 @@ for p in ps:
     theta_js.append(theta_j)
     # print("        theta_j =", theta_j)
 
-    # if calculate_error:
-    #     residual = np.abs(m_0 * R_b + np.dot(R_matrix, sigma))
-    #     max_err = condition_number * np.linalg.norm(residual, np.inf) / np.linalg.norm(m_0 * R_b, np.inf)
-    #     print(f"        Max res = {np.max(residual):.3e}, Mean res = {np.mean(residual):.3e},"
-    #           f" Max err = {max_err:.3e}")
-    # pu.plot_3d_points(centroids, sigma)
+    if calculate_error:
+        residual = np.abs(m_0 * R_b + np.dot(R_matrix, sigma))
+        max_err = condition_number_inf * np.linalg.norm(residual, np.inf) / np.linalg.norm(m_0 * R_b, np.inf)
+        print(f"        Max res = {np.max(residual):.3e}, Mean res = {np.mean(residual):.3e},"
+              f" Max err = {max_err:.3e}")
+    # plot_3d_points(centroids, sigma)
 
     # if save_to_file and full_log:
     #     jet_dir_file = "model_outputs/slot_ms/{0}/jet_dir_{1}.txt".format(n, counter)
