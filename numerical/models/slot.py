@@ -1,7 +1,3 @@
-# import sys
-#
-# sys.path.insert(0, '../../')
-
 import numpy as np
 import math
 from scipy.optimize import curve_fit
@@ -20,15 +16,10 @@ h = 2.9
 ps = np.linspace(-10 * w / 2, 10 * w / 2, 500)
 
 save_to_file = True
-full_log = False
-plot_fitted_function = False
 calculate_error = True
 
 m_0 = 1
 n = 5000
-
-if not os.path.exists("model_outputs/slot_ms/{0}".format(n)) and full_log:
-    os.makedirs("model_outputs/slot_ms/{0}".format(n))
 
 if not os.path.exists("model_outputs/slot".format(n)) and save_to_file:
     os.makedirs("model_outputs/slot".format(n))
@@ -38,9 +29,6 @@ centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=
 print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
 plot_3d_point_sets([centroids])
 R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
-# print(sys.getsizeof(R_matrix))
-# R_matrix = scipy.sparse.csc_matrix(R_matrix)
-# print(sys.getsizeof(R_matrix))
 R_inv = scipy.linalg.inv(R_matrix)
 
 condition_number_1 = np.linalg.norm(R_inv, 1) * np.linalg.norm(R_matrix, 1)
@@ -62,38 +50,12 @@ for p in ps:
         max_err = condition_number_inf * np.linalg.norm(residual, np.inf) / np.linalg.norm(m_0 * R_b, np.inf)
         print(f"        Max res = {np.max(residual):.3e}, Mean res = {np.mean(residual):.3e},"
               f" Max err = {max_err:.3e}")
-    # plot_3d_points(centroids, sigma)
-
-    # if save_to_file and full_log:
-    #     jet_dir_file = "model_outputs/slot_ms/{0}/jet_dir_{1}.txt".format(n, counter)
-    #     f = open(jet_dir_file, 'w')
-    #     f.write("{0},{1},{2},{3},{4},{5}".format(p, q, 0, res_vel[0], res_vel[1], 0))
-    #     f.close()
-    #
-    #     file_path = "model_outputs/slot_ms/{0}/p_counted_{1}.txt".format(n, counter)
-    #     counter += 1
-    #     f = open(file_path, 'w')
-    #     # f.write("{0:.5f},{1:.5f},{2:.5f},{3}\n".format(p, q, 0, -m_0))
-    #     for i in range(len(sinks)):
-    #         f.write("{0:.5f},{1:.5f},{2:.5f},{3}\n".format(sinks[i][0], sinks[i][1], sinks[i][2], -m[i]))
-    #     f.close()
-
-
-def fit_function(f_x, a, b, c, d):
-    return a * f_x * (c + f_x ** 2) * np.exp(- b * f_x ** 2) + d
-
 
 fig = plt.figure()
 fig.patch.set_facecolor('white')
 ax = plt.gca()
 
 p_bars = ps / (0.5 * w)
-
-if plot_fitted_function:
-    opt, _ = curve_fit(fit_function, p_bars, theta_js, maxfev=5000)
-    fit_xs = np.linspace(min(p_bars), max(p_bars), 100)
-    fit_ys = fit_function(fit_xs, opt[0], opt[1], opt[2], opt[3])
-    ax.plot(fit_xs, fit_ys)
 
 ax.plot(p_bars, theta_js)
 ax.set_xlabel("$\\bar{p}$")
@@ -102,7 +64,6 @@ ax.axvline(x=-1, linestyle='--', color='gray')
 ax.axvline(x=1, linestyle='--', color='gray')
 plt.show()
 
-# plt.savefig('slot_{0}.png'.format(len(centroids)))
 if save_to_file:
     arr = []
     for i in range(len(p_bars)):
