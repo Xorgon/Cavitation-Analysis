@@ -46,16 +46,29 @@ def get_vel(point, centroids, areas, source_densities, bubble_pos=None, m_0=1):
 
 # @profile
 def get_R_matrix(centroids, normals, areas, dtype=np.float32):
+    # Expand centroids into two n x n matrices.
     ps, qs = np.broadcast_arrays(np.expand_dims(centroids, 1), np.expand_dims(centroids, 0))
+
+    # Expand normals into an n x n x 3 matrix.
     n_mat = np.broadcast_to(np.expand_dims(normals, 1), (len(ps), len(qs), 3))
+
+    # Expand areas into an n x n matrix.
     a_mat = np.broadcast_to(np.expand_dims(areas, 1), (len(ps), len(qs)))
 
+    # p - q
     res_mat = np.subtract(ps, qs, dtype=dtype)  # dif_mat
+
+    # |p - q| , equals zero if p = q
     r_mat = np.linalg.norm(res_mat, axis=2)
+
+    # n . (p - q)
     res_mat = np.einsum('...k,...k', n_mat, res_mat)  # n_dot_dif
+
+    # a * (n . (p - q)) / (4 * pi * |p - q| ^ 3)
     res_mat = np.divide(a_mat * res_mat, (4 * np.pi * r_mat ** 3), where=r_mat != 0, dtype=dtype)
-    for i in range(len(centroids)):
-        res_mat[i, i] = 0.5
+
+    # Set diagonal to value obtained from integrating over the singularity in a panel (the effect on itself).
+    np.fill_diagonal(res_mat, 0.5)
     return res_mat
 
 
