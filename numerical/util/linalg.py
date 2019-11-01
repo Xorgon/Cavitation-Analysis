@@ -1,11 +1,12 @@
 import warnings
 
 import numpy as np
+from scipy.linalg import svd, inv
 
 
 def gauss_seidel(A: np.ndarray, b: np.ndarray, max_it=100, max_res=1e-10, verbose=False):
     """
-    Solve a matrix equation in the form Ax = b
+    Solve a matrix equation in the form Ax = b using the Gauss-Seidel iterative method.
     :param A:
     :param b:
     :return: x
@@ -36,3 +37,14 @@ def gauss_seidel(A: np.ndarray, b: np.ndarray, max_it=100, max_res=1e-10, verbos
         return None
 
     return x
+
+
+def svd_solve(A: np.ndarray, b: np.ndarray):
+    """
+    Solve a matrix equation in the form Ax = b using Singular Value Decomposition.
+    :param A:
+    :param b:
+    :return: x
+    """
+    U, s, Vh = svd(A)
+    return np.dot(Vh.T, np.dot(inv(np.diag(s)), np.dot(U.T, b)))

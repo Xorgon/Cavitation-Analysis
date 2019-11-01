@@ -4,7 +4,7 @@ from memory_profiler import profile
 
 import numerical.util.gen_utils as gen
 import common.util.plotting_utils as pu
-from numerical.util.linalg import gauss_seidel
+from numerical.util.linalg import gauss_seidel, svd_solve
 import scipy.linalg
 
 
@@ -78,6 +78,7 @@ def calculate_sigma(bubble_pos, centroids, normals, areas, m_0, R_inv=None, R_b=
         R = get_R_matrix(centroids, normals, areas)
         # sigma = gauss_seidel(R, -m_0 * R_b, max_res=1e-12)
         sigma = scipy.linalg.solve(R, -m_0 * R_b)  # Faster to do this than inverting the matrix
+        # sigma = svd_solve(R, -m_0 * R_b)
     else:
         sigma = -m_0 * np.dot(R_inv, R_b)
 
