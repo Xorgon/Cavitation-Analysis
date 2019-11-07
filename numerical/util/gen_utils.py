@@ -147,7 +147,6 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
 
     n_slot_floor = int(round(n_dense * w / dense_surface_length))
     n_slot_wall = int(round(n_dense * h / dense_surface_length))
-    print("n_slot_wall = {0}".format(n_slot_wall))
     n_dense_surface_boundary = int(round(n_dense * (w * (w_thresh - 1)) / 2) / dense_surface_length)
     n_sparse_surface_boundary = int(round(n_sparse / 2))
 
