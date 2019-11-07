@@ -15,7 +15,7 @@ plt_util.initialize_plt()
 
 reading_ys = [1.0, 2.0]
 
-dir_path = "../../../Data/SlotErrorMeasurement/"
+dir_path = "../../../../Data/SlotErrorMeasurement/"
 
 sys.path.append(dir_path)
 import params
@@ -55,31 +55,21 @@ for k, reading_y in enumerate(reading_ys):
         means.append(np.mean(res_dict[x]))
         stds.append(np.std(res_dict[x]))
 
-    adjusted_xs = []
+    adjusted_theta_js = []
     for i in range(len(xs)):
-        for x_r in res_dict[xs[i]]:
-            adjusted_xs.append(x_r - means[i])
+        for theta_j in res_dict[xs[i]]:
+            adjusted_theta_js.append(theta_j - means[i])
 
     mu = 0
     variance = 1
     std = float(np.mean(stds))
     x = np.linspace(mu - 3 * std, mu + 3 * std, 100)
 
-
-    def format_frac(fr):
-        """ Convert a/b to LaTeX. """
-        sp = str(fr).split('/')
-        if len(sp) == 1:
-            return sp[0]
-        else:
-            return r'$\frac{%s}{%s}$' % tuple(sp)
-
-
     print(f"q = {reading_y - y_offset}, Mean = {mu}, Standard deviation = {std}")
 
     ax = axes[k]
-    ax.hist(adjusted_xs, 100, density=True, histtype='stepfilled', color="gray")
-    ax.hist(adjusted_xs, 100, density=True, histtype='step', color="k", label="Data")
+    ax.hist(adjusted_theta_js, 100, density=True, histtype='stepfilled', color="gray")
+    ax.hist(adjusted_theta_js, 100, density=True, histtype='step', color="k", label="Data")
     ax.plot(x, stats.norm.pdf(x, mu, std), "k--", label="Normal")
     if k == 0:
         ax.set_ylabel("Probability density", fontsize=10)
