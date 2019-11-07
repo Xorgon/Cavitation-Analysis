@@ -14,7 +14,6 @@ def get_u(r):
 
 def get_avg_u(bubble_pos, sinks, radius, n=int(1e5)):
     vels = []
-    positions = []
     offsets = np.random.randn(3, n)
     offsets *= radius / np.linalg.norm(offsets, axis=0)
     offsets = offsets.T
@@ -28,10 +27,8 @@ def get_avg_u(bubble_pos, sinks, radius, n=int(1e5)):
         for sink in sinks:
             vel_1 += get_u(pos_1 - sink)
             vel_2 += get_u(pos_2 - sink)
-        positions.append(pos_1)
         vels.append(vel_1)
         vels.append(vel_2)
-    # plot_3d_point_sets([positions])
     return np.mean(vels, axis=0)
 
 
