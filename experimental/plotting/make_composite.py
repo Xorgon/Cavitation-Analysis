@@ -32,7 +32,7 @@ importlib.reload(params)
 readings = []
 for k, index in enumerate(idxs):
     for r in all_readings:
-        if r.idx == index and r.repeat_number == repeats[k]:
+        if r.idx == index and (repeats[k] is None or r.repeat_number == repeats[k]):
             readings.append(r)
             break
     if len(readings) == k:
@@ -45,7 +45,10 @@ for k, index in enumerate(idxs):
     prefix = file.get_prefix_from_idxs(dir_path, [index])
     f_dir = f"{dir_path}{prefix}{index:04}/"
     mov = file.get_mraw_from_dir(f_dir)  # type: mraw
-    frame = np.int32(mov[repeats[k] * 100 + frame_idxs[k]])
+    if repeats[k] is not None:
+        frame = np.int32(mov[repeats[k] * 100 + frame_idxs[k]])
+    else:
+        frame = np.int32(mov[frame_idxs[k]])
     frame = resize(frame, (frame.shape[0] * scale, frame.shape[1] * scale))
     frames.append(frame)
 
