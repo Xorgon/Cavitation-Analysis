@@ -23,7 +23,7 @@ def gen_plane(corner_1, corner_2, corner_3, n):
     # Define the two vectors to move in the plane.
     vect_1 = corner_2 - corner_1
     vect_2 = corner_3 - corner_1
-    normal = np.cross(vect_2, vect_1)
+    normal = np.cross(vect_1, vect_2)
     normal = normal / vect.mag(normal)
 
     ratio = vect.mag(vect_1) / vect.mag(vect_2)
@@ -70,15 +70,15 @@ def gen_slot(n=3000, h=5, w=5, length=50, depth=50):
     # Surface boundaries #
     ######################
     p_centroids, p_normals, p_areas = gen_plane([w / 2, 0, - depth / 2],
-                                                [length / 2, 0, - depth / 2],
                                                 [w / 2, 0, depth / 2],
+                                                [length / 2, 0, - depth / 2],
                                                 n_surface_boundary)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
     p_centroids, p_normals, p_areas = gen_plane([-length / 2, 0, - depth / 2],
-                                                [-w / 2, 0, - depth / 2],
                                                 [-length / 2, 0, depth / 2],
+                                                [-w / 2, 0, - depth / 2],
                                                 n_surface_boundary)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
@@ -88,8 +88,8 @@ def gen_slot(n=3000, h=5, w=5, length=50, depth=50):
     # Slot floor         #
     ######################
     p_centroids, p_normals, p_areas = gen_plane([-w / 2, -h, - depth / 2],
-                                                [w / 2, -h, - depth / 2],
                                                 [-w / 2, -h, depth / 2],
+                                                [w / 2, -h, - depth / 2],
                                                 n_slot_floor)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
@@ -99,15 +99,15 @@ def gen_slot(n=3000, h=5, w=5, length=50, depth=50):
     # Slot walls         #
     ######################
     p_centroids, p_normals, p_areas = gen_plane([-w / 2, 0, - depth / 2],
-                                                [-w / 2, -h, - depth / 2],
                                                 [-w / 2, 0, depth / 2],
+                                                [-w / 2, -h, - depth / 2],
                                                 n_slot_wall)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
     p_centroids, p_normals, p_areas = gen_plane([w / 2, -h, - depth / 2],
-                                                [w / 2, 0, - depth / 2],
                                                 [w / 2, -h, depth / 2],
+                                                [w / 2, 0, - depth / 2],
                                                 n_slot_wall)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
@@ -154,31 +154,33 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     # Surface boundaries #
     ######################
     p_centroids, p_normals, p_areas = gen_plane([w / 2, 0, - depth / 2],
-                                                [w * w_thresh / 2, 0, - depth / 2],
                                                 [w / 2, 0, depth / 2],
                                                 n_dense_surface_boundary)
+                                                [w * w_thresh / 2, 0, - depth / 2],
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
+
     p_centroids, p_normals, p_areas = gen_plane([w * w_thresh / 2, 0, - depth / 2],
-                                                [length / 2, 0, - depth / 2],
                                                 [w * w_thresh / 2, 0, depth / 2],
                                                 n_sparse_surface_boundary)
+                                                [length / 2, 0, - depth / 2],
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
     p_centroids, p_normals, p_areas = gen_plane([-w * w_thresh / 2, 0, - depth / 2],
-                                                [-w / 2, 0, - depth / 2],
                                                 [-w * w_thresh / 2, 0, depth / 2],
                                                 n_dense_surface_boundary)
+                                                [-w / 2, 0, - depth / 2],
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
+
     p_centroids, p_normals, p_areas = gen_plane([-length / 2, 0, - depth / 2],
-                                                [-w * w_thresh / 2, 0, - depth / 2],
                                                 [-length / 2, 0, depth / 2],
                                                 n_sparse_surface_boundary)
+                                                [-w * w_thresh / 2, 0, - depth / 2],
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
@@ -187,9 +189,9 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     # Slot floor         #
     ######################
     p_centroids, p_normals, p_areas = gen_plane([-w / 2, -h, - depth / 2],
-                                                [w / 2, -h, - depth / 2],
                                                 [-w / 2, -h, depth / 2],
                                                 n_slot_floor)
+                                                [w / 2, -h, - depth / 2],
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
@@ -198,16 +200,17 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     # Slot walls         #
     ######################
     p_centroids, p_normals, p_areas = gen_plane([-w / 2, 0, - depth / 2],
-                                                [-w / 2, -h, - depth / 2],
                                                 [-w / 2, 0, depth / 2],
                                                 n_slot_wall)
+                                                [-w / 2, -h, - depth / 2],
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
+
     p_centroids, p_normals, p_areas = gen_plane([w / 2, -h, - depth / 2],
-                                                [w / 2, 0, - depth / 2],
                                                 [w / 2, -h, depth / 2],
                                                 n_slot_wall)
+                                                [w / 2, 0, - depth / 2],
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
@@ -221,16 +224,16 @@ def gen_corner(n=3000, length=25, depth=50, angle=np.pi / 2):
     areas = []
 
     p_centroids, p_normals, p_areas = gen_plane([0, 0, - depth / 2],
-                                                [length, 0, - depth / 2],
                                                 [0, 0, depth / 2],
+                                                [length, 0, - depth / 2],
                                                 n / 2)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
     p_centroids, p_normals, p_areas = gen_plane([length * math.cos(angle), length * math.sin(angle), - depth / 2],
-                                                [0, 0, - depth / 2],
                                                 [length * math.cos(angle), length * math.sin(angle), depth / 2],
+                                                [0, 0, - depth / 2],
                                                 n / 2)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
@@ -249,32 +252,32 @@ def gen_varied_corner(n=3000, length=25, depth=50, angle=np.pi / 2, thresh=10, d
     n_sparse = n - n_dense
 
     p_centroids, p_normals, p_areas = gen_plane([0, 0, - depth / 2],
-                                                [thresh, 0, - depth / 2],
                                                 [0, 0, depth / 2],
+                                                [thresh, 0, - depth / 2],
                                                 n_dense / 2)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
     p_centroids, p_normals, p_areas = gen_plane([thresh, 0, - depth / 2],
-                                                [length, 0, - depth / 2],
                                                 [thresh, 0, depth / 2],
+                                                [length, 0, - depth / 2],
                                                 n_sparse / 2)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
     p_centroids, p_normals, p_areas = gen_plane([thresh * math.cos(angle), thresh * math.sin(angle), - depth / 2],
-                                                [0, 0, - depth / 2],
                                                 [thresh * math.cos(angle), thresh * math.sin(angle), depth / 2],
+                                                [0, 0, - depth / 2],
                                                 n_dense / 2)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
     p_centroids, p_normals, p_areas = gen_plane([length * math.cos(angle), length * math.sin(angle), - depth / 2],
-                                                [thresh * math.cos(angle), thresh * math.sin(angle), - depth / 2],
                                                 [length * math.cos(angle), length * math.sin(angle), depth / 2],
+                                                [thresh * math.cos(angle), thresh * math.sin(angle), - depth / 2],
                                                 n_sparse / 2)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
@@ -304,8 +307,8 @@ def gen_rectangle(n=3000, h=5, w=5, depth=50):
     # Bottom             #
     ######################
     p_centroids, p_normals, p_areas = gen_plane([0, 0, - depth / 2],
-                                                [w, 0, - depth / 2],
                                                 [0, 0, depth / 2],
+                                                [w, 0, - depth / 2],
                                                 n_bottom)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
@@ -315,8 +318,8 @@ def gen_rectangle(n=3000, h=5, w=5, depth=50):
     # Top                #
     ######################
     p_centroids, p_normals, p_areas = gen_plane([w, h, - depth / 2],
-                                                [0, h, - depth / 2],
                                                 [w, h, depth / 2],
+                                                [0, h, - depth / 2],
                                                 n_bottom)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
@@ -326,8 +329,8 @@ def gen_rectangle(n=3000, h=5, w=5, depth=50):
     # Left Side          #
     ######################
     p_centroids, p_normals, p_areas = gen_plane([0, h, - depth / 2],
-                                                [0, 0, - depth / 2],
                                                 [0, h, depth / 2],
+                                                [0, 0, - depth / 2],
                                                 n_side)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
@@ -337,8 +340,8 @@ def gen_rectangle(n=3000, h=5, w=5, depth=50):
     # Right Side          #
     ######################
     p_centroids, p_normals, p_areas = gen_plane([w, 0, - depth / 2],
-                                                [w, h, - depth / 2],
                                                 [w, 0, depth / 2],
+                                                [w, h, - depth / 2],
                                                 n_side)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
