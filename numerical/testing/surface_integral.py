@@ -29,6 +29,7 @@ def get_avg_u(bubble_pos, sinks, radius, n=int(1e5)):
             vel_2 += get_u(pos_2 - sink)
         vels.append(vel_1)
         vels.append(vel_2)
+
     return np.mean(vels, axis=0)
 
 
@@ -70,15 +71,42 @@ def get_avg_u(bubble_pos, sinks, radius, n=int(1e5)):
 
 theta_b = np.pi / 3
 b = np.array([np.cos(theta_b), np.sin(theta_b), 0])
-sink_pos = [[-b[0], b[1], 0],
-            [-b[0], -b[1], 0],
-            [b[0], -b[1], 0]]
-radii = np.linspace(0.01, np.sin(theta_b), 32)
+# sink_pos = np.array([[-b[0], b[1], 0],
+#                      [-b[0], -b[1], 0],
+#                      [b[0], -b[1], 0]])
+sink_pos = np.array([[0, 0, 0]])
+# radii = np.linspace(0.01, 2.5, 128)
+radii = np.linspace(0.01, 1.2 * np.linalg.norm(b - sink_pos[0]), 32)
+
+k = 0  # An offset parameter
+plt.scatter(b[0], b[1])
+plt.scatter(sink_pos[:, 0], sink_pos[:, 1])
+for radius in radii:
+    circle = plt.Circle((b[0] - k * radius, b[1] - k * radius), radius, color="k", fill=False)
+    plt.gca().add_artist(circle)
+plt.axhline(0)
+plt.axvline(0)
+plt.show()
+
 angles = []
+magnitudes = []
 for radius in radii:
     print(radius)
-    v = get_avg_u(b, sink_pos, radius, n=int(1e5))
-    angles.append(- np.arctan2(v[1], v[0]) - np.pi / 2)
+    v = get_avg_u(b - np.array([k * radius, k * radius, 0]), sink_pos, radius, n=int(2e5))
+    magnitudes.append(np.linalg.norm(v))
+    angle = - np.arctan2(v[1], v[0]) - np.pi / 2
+    if angle > np.pi:
+        angle -= np.pi * 2
+    if angle < - np.pi:
+        angle += np.pi * 2
+    angles.append(angle)
+
+# plt.axvline(min(np.sin(theta_b), np.cos(theta_b)))
+# plt.axvline(2 * np.sin(theta_b))
+# plt.axvline(2 * np.cos(theta_b))
+# plt.axvline(2)
+plt.plot(radii, magnitudes)
+plt.show()
 
 plt.plot(radii, angles)
 plt.show()
