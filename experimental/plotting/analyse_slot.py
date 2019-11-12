@@ -18,25 +18,31 @@ import common.util.plotting_utils as plt_util
 
 def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, config=None, num_series=None):
     create_window = not mpl.get_backend() == "Qt5Agg"
-    if config is None:
-        config = {
-            "use_all_series": True,
-            "use_all_dirs": True,
-            "normalize": True,
-            "plot_fits": False,
-            "skip_bad_data": True,
-            "plot_means": False,
-            "labelled": True,
-            "label_tags": False,
-            "error_bars": True,
-            "show_title": False,
-            "do_shift": True,
-            "verbose": False,
-            "plot_predicted": False
-        }
+    default_config = {
+        "use_all_series": True,
+        "use_all_dirs": True,
+        "normalize": True,
+        "plot_fits": False,
+        "skip_bad_data": True,
+        "plot_means": False,
+        "labelled": True,
+        "label_tags": False,
+        "colours": True,
+        "error_bars": True,
+        "show_title": False,
+        "do_shift": True,
+        "verbose": False,
+        "plot_predicted": False
+    }
 
+    if config is None:
+        config = default_config
         if not use_defaults:
             config = cu.get_config(config, create_window=create_window)
+    else:
+        for key in default_config.keys():
+            if key not in config:
+                config[key] = default_config[key]
 
     use_all_series = config["use_all_series"]  # Use all reading_y values for selected data sets.
     use_all_dirs = config["use_all_dirs"]  # Use all directories that contain params.py.
@@ -46,6 +52,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     plot_means = config["plot_means"]  # Plot a line through all of the means.
     labelled = config["labelled"]  # Label the graph with the q value(s).
     label_tags = config["label_tags"]  # Include geometry tags in labels.
+    colours = config["colours"]  # Plot each series in different colours.
     error_bars = config["error_bars"]  # Plot as a mean and error bars rather than data points.
     show_title = config["show_title"]  # Show a title on the graph.
     do_shift = config["do_shift"]  # Shift the data according to peak positions.
@@ -84,9 +91,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     for dir_path in dirs:
         sys.path.append(dir_path)
         import params
-
         importlib.reload(params)
-
         sys.path.remove(dir_path)
 
         x_offset = params.left_slot_wall_x + params.slot_width / 2
@@ -286,20 +291,28 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
             ax.plot(mean_xs, means, color="g")
         marker = markers.pop(0)
         if labelled:
-            legend_label = f"q = {np.mean(res_dict[label][2]):.2f}"
+            c = None
+            if len(res_dict.keys()) > 1:
+                legend_label = f"q = {np.mean(res_dict[label][2]):.2f}"
+            else:
+                legend_label = "Experimental"
+                c = "k"
             if label_tags:
                 legend_label = "{0}, ".format(label.split(":")[0]) + legend_label
+            if not colours:
+                c = 'k'
             if error_bars:
-                ax.errorbar(mean_xs, means, yerr=y_errs, capsize=3, fmt=marker, label=legend_label)
+                ax.errorbar(mean_xs, means, yerr=y_errs, capsize=3, fmt=marker, label=legend_label, color=c)
             else:
-                ax.scatter(res_dict[label][0], res_dict[label][1], marker=marker, label=legend_label)
+                ax.scatter(res_dict[label][0], res_dict[label][1], c, marker=marker, label=legend_label)
         else:
+            c = None if colours else 'k'
             if error_bars:
-                ax.errorbar(mean_xs, means, yerr=y_errs, capsize=3, fmt=marker, color='k')
+                ax.errorbar(mean_xs, means, yerr=y_errs, capsize=3, fmt=marker, color=c)
                 if verbose:
                     print(f"{label}, Mean q = {np.mean(res_dict[label][2])}\n")
             else:
-                ax.scatter(res_dict[label][0], res_dict[label][1], marker=marker, color='k')
+                ax.scatter(res_dict[label][0], res_dict[label][1], marker=marker, color=c)
                 if verbose:
                     print(f"{label}, Mean q = {np.mean(res_dict[label][2])}\n")
 
@@ -319,9 +332,11 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
             if normalize:
                 predicted_xs = np.divide(predicted_xs, p_bar_theta_j_max)
                 predicted_theta_js = np.divide(predicted_theta_js, theta_j_max)
+            label = f"Numerical {i}" if len(prediction_files) > 1 else "Numerical"
+            c = colors[i] if not colours else 'k'
             ax.plot([x for x in predicted_xs if x_min < x < x_max],
                     [theta_j for x, theta_j in zip(predicted_xs, predicted_theta_js) if x_min < x < x_max],
-                    colors[i], label=f"Numerical {i}", zorder=9001)
+                    c, label=label, zorder=9001)
             ax.set_xlim((x_min, x_max))
     if normalize:
         if set_x_label:
