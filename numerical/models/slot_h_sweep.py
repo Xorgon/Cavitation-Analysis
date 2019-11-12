@@ -28,9 +28,6 @@ normalize = True
 m_0 = 1
 n = 20000
 
-if not os.path.exists("slot_ms/{0}".format(n)):
-    os.makedirs("slot_ms/{0}".format(n))
-
 fig_width = 5.31445
 fig = plt.figure(figsize=(fig_width, fig_width / 2), num=window_title)
 
