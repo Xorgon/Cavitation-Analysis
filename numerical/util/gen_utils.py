@@ -7,7 +7,7 @@ import numpy as np
 import common.util.vector_utils as vect
 
 
-def gen_plane(corner_1, corner_2, corner_3, n):
+def gen_plane(corner_1, corner_2, corner_3, n, filename=None):
     """
     Generates the control points, normals, and sinks for a plane.
     :param corner_1: First corner.
@@ -44,6 +44,27 @@ def gen_plane(corner_1, corner_2, corner_3, n):
     centroids = []
     normals = []
     areas = []
+
+    if filename is not None:
+        f = open(f"{filename[:-4]}-{side_1_n}x{side_2_n}{filename[-4:]}", "w")
+        f.write("x,y,z\n")
+        to_add = []  # To save for writing at the end.
+        for i, j in it.product(range(side_1_n), range(side_2_n)):
+            panel_c1 = corner_1 + i * side_1_panel_h * vect_1_hat + j * side_2_panel_h * vect_2_hat
+            panel_c2 = panel_c1 + side_1_panel_h * vect_1_hat
+            panel_c3 = panel_c1 + side_2_panel_h * vect_2_hat
+            panel_c4 = panel_c1 + side_1_panel_h * vect_1_hat + side_2_panel_h * vect_2_hat
+
+            f.write(f"{panel_c1[0]},{panel_c1[1]},{panel_c1[2]}\n")
+            if i == side_1_n - 1:
+                to_add.append(f"{panel_c2[0]},{panel_c2[1]},{panel_c2[2]}\n")
+            if j == side_2_n - 1:
+                f.write(f"{panel_c3[0]},{panel_c3[1]},{panel_c3[2]}\n")
+            if i == side_1_n - 1 and j == side_2_n - 1:
+                to_add.append(f"{panel_c4[0]},{panel_c4[1]},{panel_c4[2]}\n")
+        for s in to_add:
+            f.write(s)
+        f.close()
 
     for i, j in it.product(np.linspace(side_1_panel_h / 2, vect.mag(vect_1) - side_1_panel_h / 2, side_1_n),
                            np.linspace(side_2_panel_h / 2, vect.mag(vect_2) - side_2_panel_h / 2, side_2_n)):
@@ -155,32 +176,32 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     ######################
     p_centroids, p_normals, p_areas = gen_plane([w / 2, 0, - depth / 2],
                                                 [w / 2, 0, depth / 2],
-                                                n_dense_surface_boundary)
                                                 [w * w_thresh / 2, 0, - depth / 2],
+                                                n_dense_surface_boundary, "model_outputs/left_sparse.csv")
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
     p_centroids, p_normals, p_areas = gen_plane([w * w_thresh / 2, 0, - depth / 2],
                                                 [w * w_thresh / 2, 0, depth / 2],
-                                                n_sparse_surface_boundary)
                                                 [length / 2, 0, - depth / 2],
+                                                n_sparse_surface_boundary, "model_outputs/left_dense.csv")
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
     p_centroids, p_normals, p_areas = gen_plane([-w * w_thresh / 2, 0, - depth / 2],
                                                 [-w * w_thresh / 2, 0, depth / 2],
-                                                n_dense_surface_boundary)
                                                 [-w / 2, 0, - depth / 2],
+                                                n_dense_surface_boundary, "model_outputs/right_dense.csv")
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
     p_centroids, p_normals, p_areas = gen_plane([-length / 2, 0, - depth / 2],
                                                 [-length / 2, 0, depth / 2],
-                                                n_sparse_surface_boundary)
                                                 [-w * w_thresh / 2, 0, - depth / 2],
+                                                n_sparse_surface_boundary, "model_outputs/right_sparse.csv")
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
@@ -190,8 +211,8 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     ######################
     p_centroids, p_normals, p_areas = gen_plane([-w / 2, -h, - depth / 2],
                                                 [-w / 2, -h, depth / 2],
-                                                n_slot_floor)
                                                 [w / 2, -h, - depth / 2],
+                                                n_slot_floor, "model_outputs/floor.csv")
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
@@ -201,16 +222,16 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     ######################
     p_centroids, p_normals, p_areas = gen_plane([-w / 2, 0, - depth / 2],
                                                 [-w / 2, 0, depth / 2],
-                                                n_slot_wall)
                                                 [-w / 2, -h, - depth / 2],
+                                                n_slot_wall, "model_outputs/left_wall.csv")
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
     p_centroids, p_normals, p_areas = gen_plane([w / 2, -h, - depth / 2],
                                                 [w / 2, -h, depth / 2],
-                                                n_slot_wall)
                                                 [w / 2, 0, - depth / 2],
+                                                n_slot_wall, "model_outputs/right_wall.csv")
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
