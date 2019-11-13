@@ -18,7 +18,7 @@ plt.rc('patch', linewidth=0.5)
 
 window_title = "Varied Slot 32 bit"
 
-hs = np.linspace(1, 3, 10)
+hs = np.linspace(1, 5, 5)
 w = 2
 ps = np.linspace(-3 * w, 3 * w, 300)
 q = 2
@@ -105,5 +105,5 @@ norm_ax.annotate('$b)$', xy=(0, 0), xytext=(0.61, 0.89), textcoords='figure frac
 # xmin, xmax = norm_ax.get_xlim()
 # norm_ax.set_xticks(np.round(np.linspace(xmin, xmax, 5), 2))
 
-plt.savefig('h_sweep_plot.pdf')
+plt.savefig('model_outputs/h_sweep_plot.pdf')
 plt.show()
