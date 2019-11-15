@@ -9,8 +9,8 @@ length = 50
 depth = 25
 n = 5000
 centroids, normals, areas = gen.gen_plane([- length / 2, 0, - depth / 2],
-                                          [length / 2, 0, - depth / 2],
                                           [- length / 2, 0, depth / 2],
+                                          [length / 2, 0, - depth / 2],
                                           n)
 print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
 R_matrix = bem.get_R_matrix(centroids, normals, areas)

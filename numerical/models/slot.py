@@ -10,9 +10,9 @@ import common.util.file_utils as file
 import scipy.sparse
 
 # ps = [8]
-w = 4.2
-q = 2.43
-h = 11.47
+w = 2.2
+h = 2.7
+q = 3.84
 ps = np.linspace(-6 * w / 2, 6 * w / 2, 500)
 
 save_to_file = False

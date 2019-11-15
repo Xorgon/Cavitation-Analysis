@@ -48,15 +48,17 @@ def get_peters_corner_jet_dir(sink_pos, peters_n):
     return eu.get_all_vel(elements, sink_pos[0], sink_pos[1])
 
 
-n = 20000
+n = 10000
 bubble_dist = 5
 m_0 = 1
-peters_n = 4
+peters_n = 2
+include_bubble = False
+bubble_radius = 1  # If None, don't plot the bubble boundary
 
 corner_length = 50
 
 corner_angle = math.pi / peters_n
-theta_b = corner_angle / 2
+theta_b = corner_angle / 3
 centroids, normals, areas = gen.gen_varied_corner(n, length=corner_length, angle=corner_angle, depth=25,
                                                   density_ratio=0.25, thresh=bubble_dist)
 # centroids, normals, areas = gen.gen_corner(n, length=corner_length, angle=corner_angle, depth=50)
@@ -72,7 +74,7 @@ bubble_y = bubble_dist * math.sin(theta_b)
 R_b = bem.get_R_vector([bubble_x, bubble_y, 0], centroids, normals)
 sigma = bem.calculate_sigma([bubble_x, bubble_y, 0], centroids, normals, areas, m_0=m_0, R_inv=R_inv, R_b=R_b)
 
-corner_elements = get_corner_elements([bubble_x, bubble_y], peters_n)
+corner_elements = get_corner_elements([bubble_x, bubble_y], peters_n, incl_bubble=include_bubble)
 
 offset = 0.01
 max_dist = bubble_dist * 2
@@ -106,7 +108,8 @@ for theta, dist in itertools.product(thetas, dists):
     #
     # BEM
     #
-    bem_vel = bem.get_vel([x, y, 0], centroids, areas, sigma, [bubble_x, bubble_y, 0])
+    bubble_pos = [bubble_x, bubble_y, 0] if include_bubble else None
+    bem_vel = bem.get_vel([x, y, 0], centroids, areas, sigma, bubble_pos=bubble_pos)
     bem_speed = np.linalg.norm(bem_vel)
 
     bem_us.append(bem_vel[0] / bem_speed)
@@ -142,6 +145,11 @@ dif_speeds = np.array(dif_speeds)
 fig, axes = plt.subplots(1, 3, figsize=(19, 6), num=f"n = {peters_n}")
 fig.patch.set_facecolor('white')
 scale = 4
+
+if bubble_radius is not None:
+    for ax in axes:
+        circle = plt.Circle((bubble_x, bubble_y), bubble_radius, color="k", fill=False)
+        ax.add_artist(circle)
 
 centroids_to_plot = np.array([centroid for centroid in centroids if
                               centroid[0] < max_dist and centroid[1] < max_dist * np.sin(corner_angle)])

@@ -40,8 +40,8 @@ def find_slot_peak(w, q, h, n=10000, length=50, depth=50, varied_slot_density_ra
 
 
 if __name__ == "__main__":
-    w = 2
-    q = 1
+    w = 2.2
+    q = 2.81
     h = 2.7
 
     ns = np.round(np.linspace(5000, 20000, 10))
