@@ -346,9 +346,9 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
             ax.set_ylabel("$\\hat{\\theta}$", labelpad=2)
     else:
         if set_x_label:
-            ax.set_xlabel("$\\bar{p}$", labelpad=2)
+            ax.set_xlabel("$\\bar{p}$", labelpad=0)
         if set_y_label:
-            ax.set_ylabel("$\\theta_j$", labelpad=2)
+            ax.set_ylabel("$\\theta_j$", labelpad=-5)
     if hasattr(params, 'title') and show_title:
         ax.set_title(params.title)
     # if reading_y is not None and labelled and show_title:
@@ -359,7 +359,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     if labelled:
         handles, labels = ax.get_legend_handles_labels()
         handles, labels = zip(*sorted(zip(handles, labels), key=lambda k: k[1]))
-        ax.legend(handles, labels, loc='lower right', fancybox=False, edgecolor='k', shadow=False, handletextpad=0.1,
+        ax.legend(handles, labels, loc='upper left', fancybox=False, edgecolor='k', shadow=False, handletextpad=0.1,
                   borderpad=0.3)
     if not normalize:
         ax.axvline(x=-1, linestyle='--', color='gray')
@@ -367,14 +367,15 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
 
 
 if __name__ == "__main__":
-    plt_util.initialize_plt()
+    font_size = 18
+    plt_util.initialize_plt(font_size=font_size)
 
     fig_width = 5.31445
     fig_height = 5.31445 * 2 / 3
-    left_padding = 0.7
+    left_padding = 0.4 + font_size / 35
     right_padding = 0.08
     top_padding = 0.08
-    bottom_padding = 0.4
+    bottom_padding = 0.2 + font_size / 50
     v_spacing = 0.3
     h_spacing = 0.1
     ax_width = fig_width - left_padding - right_padding

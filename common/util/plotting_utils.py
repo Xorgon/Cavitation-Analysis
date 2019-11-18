@@ -17,9 +17,9 @@ def plot_frame(frame, pos=None, show_immediately=True):
         plt.show()
 
 
-def initialize_plt():
+def initialize_plt(font_size=10):
     plt.rc('text', usetex=True)
-    font = {'family': 'serif', 'size': 10, 'serif': ['cmr10']}
+    font = {'family': 'serif', 'size': font_size, 'serif': ['cmr10']}
     plt.rc('font', **font)
     plt.rc('lines', linewidth=1, markersize=3)
     plt.rc('axes', linewidth=0.5)
