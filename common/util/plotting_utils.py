@@ -17,13 +17,13 @@ def plot_frame(frame, pos=None, show_immediately=True):
         plt.show()
 
 
-def initialize_plt(font_size=10):
+def initialize_plt(font_size=10, line_scale=1):
     plt.rc('text', usetex=True)
     font = {'family': 'serif', 'size': font_size, 'serif': ['cmr10']}
     plt.rc('font', **font)
-    plt.rc('lines', linewidth=1, markersize=3)
-    plt.rc('axes', linewidth=0.5)
-    plt.rc('patch', linewidth=0.5)
+    plt.rc('lines', linewidth=line_scale, markersize=3 * line_scale)
+    plt.rc('axes', linewidth=0.5 * line_scale)
+    plt.rc('patch', linewidth=0.5 * line_scale)
 
 
 color_dict = {'red': ((0.0, 0.0, 0.0),

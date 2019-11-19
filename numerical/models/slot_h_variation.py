@@ -17,7 +17,7 @@ for h in hs:
     theta_stars.append(theta_j)
     p_bar_stars.append(2 * p / w)
 
-initialize_plt(18)
+initialize_plt(font_size=18, line_scale=2)
 
 fig = plt.figure()
 ax = fig.gca()
