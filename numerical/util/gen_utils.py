@@ -14,6 +14,7 @@ def gen_plane(corner_1, corner_2, corner_3, n, filename=None):
     :param corner_2: Second corner (adjacent to corner_1).
     :param corner_3: Third corner (adjacent to corner_1).
     :param n: Number of panels to generate.
+    :param filename: File name root for saving mesh.
     :return: centroids, normals, areas
     """
     corner_1 = np.array(corner_1)
@@ -137,7 +138,7 @@ def gen_slot(n=3000, h=5, w=5, length=50, depth=50):
     return centroids, normals, areas
 
 
-def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_ratio=0.5):
+def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_ratio=0.5, save_to_files=False):
     """
     Generates a slot with varying panel density.
 
@@ -174,34 +175,38 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     ######################
     # Surface boundaries #
     ######################
+    filename = "model_outputs/left_sparse.csv" if save_to_files else None
     p_centroids, p_normals, p_areas = gen_plane([w / 2, 0, - depth / 2],
                                                 [w / 2, 0, depth / 2],
                                                 [w * w_thresh / 2, 0, - depth / 2],
-                                                n_dense_surface_boundary, "model_outputs/left_sparse.csv")
+                                                n_dense_surface_boundary, filename=filename)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
+    filename = "model_outputs/left_dense.csv" if save_to_files else None
     p_centroids, p_normals, p_areas = gen_plane([w * w_thresh / 2, 0, - depth / 2],
                                                 [w * w_thresh / 2, 0, depth / 2],
                                                 [length / 2, 0, - depth / 2],
-                                                n_sparse_surface_boundary, "model_outputs/left_dense.csv")
+                                                n_sparse_surface_boundary, filename=filename)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
+    filename = "model_outputs/right_dense.csv" if save_to_files else None
     p_centroids, p_normals, p_areas = gen_plane([-w * w_thresh / 2, 0, - depth / 2],
                                                 [-w * w_thresh / 2, 0, depth / 2],
                                                 [-w / 2, 0, - depth / 2],
-                                                n_dense_surface_boundary, "model_outputs/right_dense.csv")
+                                                n_dense_surface_boundary, filename=filename)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
+    filename = "model_outputs/right_sparse.csv" if save_to_files else None
     p_centroids, p_normals, p_areas = gen_plane([-length / 2, 0, - depth / 2],
                                                 [-length / 2, 0, depth / 2],
                                                 [-w * w_thresh / 2, 0, - depth / 2],
-                                                n_sparse_surface_boundary, "model_outputs/right_sparse.csv")
+                                                n_sparse_surface_boundary, filename=filename)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
@@ -209,10 +214,11 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     ######################
     # Slot floor         #
     ######################
+    filename = "model_outputs/floor.csv" if save_to_files else None
     p_centroids, p_normals, p_areas = gen_plane([-w / 2, -h, - depth / 2],
                                                 [-w / 2, -h, depth / 2],
                                                 [w / 2, -h, - depth / 2],
-                                                n_slot_floor, "model_outputs/floor.csv")
+                                                n_slot_floor, filename=filename)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
@@ -220,18 +226,20 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     ######################
     # Slot walls         #
     ######################
+    filename = "model_outputs/left_wall.csv" if save_to_files else None
     p_centroids, p_normals, p_areas = gen_plane([-w / 2, 0, - depth / 2],
                                                 [-w / 2, 0, depth / 2],
                                                 [-w / 2, -h, - depth / 2],
-                                                n_slot_wall, "model_outputs/left_wall.csv")
+                                                n_slot_wall, filename=filename)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
 
+    filename = "model_outputs/right_wall.csv" if save_to_files else None
     p_centroids, p_normals, p_areas = gen_plane([w / 2, -h, - depth / 2],
                                                 [w / 2, -h, depth / 2],
                                                 [w / 2, 0, - depth / 2],
-                                                n_slot_wall, "model_outputs/right_wall.csv")
+                                                n_slot_wall, filename=filename)
     centroids.extend(p_centroids)
     normals.extend(p_normals)
     areas.extend(p_areas)
