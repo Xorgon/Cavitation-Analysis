@@ -5,7 +5,6 @@ TODO:
 - Improve error detection.
     -> Void fraction? (of both frames)
     -> Frames too far along (>50?)
-- Tidy this up, possibly create a Reading object to make lists less messy.
 - Improve handling of sideways measurements (separate analysis from processing i.e. just x, y, z, idx, vectors etc.)
 """
 import os
