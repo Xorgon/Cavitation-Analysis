@@ -105,10 +105,12 @@ def get_jet_dir_and_sigma(bubble_pos, centroids, normals, areas, m_0=1, R_inv=No
     return vel, sigma
 
 
-def get_jet_dirs(bubble_pos_list, centroids, normals, areas, m_0=1, R_inv=None, R_b=None):
+def get_jet_dirs(bubble_pos_list, centroids, normals, areas, m_0=1, R_inv=None, R_b=None, verbose=False):
     vels = np.empty((len(bubble_pos_list), 3))
 
     for i, pos in enumerate(bubble_pos_list):
+        if verbose:
+            print(f"{100 * i / len(bubble_pos_list):.2f}% complete...")
         vels[i] = get_jet_dir_and_sigma(pos, centroids, normals, areas, m_0=m_0, R_inv=R_inv, R_b=R_b)[0]
 
     return vels
