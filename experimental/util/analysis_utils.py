@@ -48,6 +48,9 @@ class Reading:
     def is_complete(self):
         return self.disp_vect and self.bubble_pos and self.max_bubble_area
 
+    def get_jet_angle(self):
+        return np.arctan2(-self.disp_vect[1], self.disp_vect[0]) + np.pi / 2
+
     @staticmethod
     def from_str(string: str):
         """ Deserializes and returns a Reading object. """
