@@ -45,6 +45,7 @@ class JumpSlider(QSlider):
 
 class PositionSelection(QWidget):
     """
+    TODO:
     -> Maybe make a composite image from all the positions after calibration.
     -> Snap to the nearest position centered on the cursor (allow clicking and dragging).
     """
@@ -391,6 +392,7 @@ class DataWidget(QWidget):
         if min_r is not None:
             last_position_idx = self.position_idx
             self.position_idx = min_r
+            self.repeat_idx = 0
             self.move_points(last_position_idx)
             self.update()
 
@@ -417,6 +419,7 @@ class DataWidget(QWidget):
         if min_r is not None:
             last_position_idx = self.position_idx
             self.position_idx = min_r
+            self.repeat_idx = 0
             self.move_points(last_position_idx)
             self.update()
 
@@ -443,6 +446,7 @@ class DataWidget(QWidget):
         if min_r is not None:
             last_position_idx = self.position_idx
             self.position_idx = min_r
+            self.repeat_idx = 0
             self.move_points(last_position_idx)
             self.update()
 
@@ -469,6 +473,7 @@ class DataWidget(QWidget):
         if min_r is not None:
             last_position_idx = self.position_idx
             self.position_idx = min_r
+            self.repeat_idx = 0
             self.move_points(last_position_idx)
             self.update()
 
