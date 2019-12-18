@@ -6,7 +6,7 @@ from common.util.plotting_utils import initialize_plt
 import numpy as np
 import matplotlib.pyplot as plt
 
-dirs = []
+dirs = ["../../../../Data/SlotErrorMeasurement/"]
 root_dir = "../../../../Data/SlotSweeps"
 for root, _, files in os.walk(root_dir):
     if "params.py" in files:
@@ -15,6 +15,7 @@ print(f"Found {len(dirs)} data sets")
 
 radii = []
 displacements = []
+avg_vels = []
 ps = []
 qs = []
 ws = []
@@ -46,21 +47,29 @@ for i, dir_path in enumerate(dirs):
             hs.append(params.slot_height)
             radius = np.sqrt(reading.max_bubble_area / np.pi) * params.mm_per_px
             radii.append(radius)
-            displacements.append(0.5 * np.linalg.norm(reading.disp_vect) * params.mm_per_px)
+            displacement = np.linalg.norm(reading.disp_vect) * params.mm_per_px
+            displacements.append(displacement)
+            avg_vels.append((displacement / 1000) * 1e5 / reading.inter_max_frames)  # m/s
             theta_js.append(reading.get_jet_angle())
             standoff = q / radius
             zetas.append(0.195 * standoff ** (-2))  # Supponen et al. 2016
 
 initialize_plt(font_size=14, line_scale=2)
 plt.figure()
-# plt.scatter(np.divide(np.divide(qs, np.cos(theta_js)), radii), np.divide(displacements, radii),
-#             c=np.log(np.abs(2 * np.divide(ps, ws))), marker="o", cmap=plt.cm.get_cmap('brg'))
 plt.scatter(np.divide(qs, radii), np.divide(displacements, radii),
             c=np.log(np.abs(2 * np.divide(ps, ws))) > 1, marker=".", cmap=plt.cm.get_cmap('brg'))
 plt.colorbar(label="$log(|\\bar{p}|)$")
-# plt.colorbar(label="$|\\theta_j|$")
 plt.xlabel("$q / R$")
 plt.ylabel("$\Delta / R$ = displacement / radius")
+plt.xscale('log')
+plt.yscale('log')
+plt.tight_layout()
+
+plt.figure()
+plt.scatter(np.divide(qs, radii), avg_vels,
+            c=np.log(np.abs(2 * np.divide(ps, ws))), marker=".", cmap=plt.cm.get_cmap('brg'))
+plt.xlabel("$q / R$")
+plt.ylabel("Average translation velocity")
 plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
@@ -81,7 +90,7 @@ plt.scatter(zetas, np.divide(displacements, radii),
             c=np.log(np.abs(2 * np.divide(ps, ws))), marker=".", cmap=plt.cm.get_cmap('brg'))
 plt.colorbar(label="$log(|\\bar{p}|)$")
 plt.xlabel("$\\zeta$ (Supponen et al. 2016)")
-plt.ylabel("$0.5*\Delta / R$ = 0.5*displacement / radius")
+plt.ylabel("$\Delta / R$ = displacement / radius")
 plt.xscale('log')
 plt.yscale('log')
 plt.legend()
