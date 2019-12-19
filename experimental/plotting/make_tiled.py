@@ -21,7 +21,7 @@ tile_tl_corner = (131, 55)
 tile_br_corner = (292, 236)
 scale = 2
 
-dir_path = "../../../Data/SlotSweeps/w2h3/"
+dir_path = "../../../../Data/SlotSweeps/w2h3/"
 
 readings = au.load_readings(dir_path + "readings_dump.csv")
 readings = sorted(readings, key=lambda r: r.idx)  # type: List[au.Reading]
