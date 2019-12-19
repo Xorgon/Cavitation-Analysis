@@ -44,9 +44,9 @@ def convert_mraw(mraw_obj, outputFile, codec='X264', fps=24, separate_readings=F
         repeats = movie.image_count // 100
         for i in range(repeats):
             filename = outputFile[:-4] + "_" + str(i) + outputFile[-4:]
-            convert(movie, filename, frame_range=(i * 100, (i + 1) * 100), codec=codec, fps=fps)
+            convert(movie, filename, frame_range=(i * 100, (i + 1) * 100), codec=codec, fps=fps, contrast=2)
     else:
-        convert(mraw_obj, outputFile, codec=codec, fps=fps)
+        convert(mraw_obj, outputFile, codec=codec, fps=fps, contrast=2)
 
 
 def convert_series(dir_path, codec="X264", file_format="mp4"):
@@ -62,8 +62,6 @@ def convert_series(dir_path, codec="X264", file_format="mp4"):
 
     reading_prefix = file.get_prefix_from_idxs(dir_path, np.array(input_data)[:, 2])
     for i in range(len(input_data)):
-        if i > 0:
-            break  # TODO: Remove this to convert whole series
         print("Converting reading {0}.".format(i))
         reading_path = dir_path + reading_prefix + str(input_data[i][2]).rjust(4, "0") + "/"
         mraw_obj = file.get_mraw_from_dir(reading_path)
