@@ -293,7 +293,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         marker = markers.pop(0)
         if labelled:
             c = None
-            if len(res_dict.keys()) > 1:
+            if len(res_dict.keys()) > 1 or colours:
                 legend_label = f"q = {np.mean(res_dict[label][2]):.2f}"
             else:
                 legend_label = "Experimental"
@@ -389,4 +389,5 @@ if __name__ == "__main__":
                         hspace=v_spacing / ax_width)
     this_ax = this_fig.gca()
     this_ax = analyse_slot(this_ax)
+    # plt.tight_layout()
     plt.show()
