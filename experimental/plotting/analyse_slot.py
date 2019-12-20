@@ -320,7 +320,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     print(f"Number of rejected data sets = {num_rejected_sets}")
     if plot_predicted:
         x_min, x_max = ax.get_xlim()
-        colors = ['r', 'g', 'm', 'orange', 'p']
+        colors = ['r', 'g', 'm', 'orange', 'b']
         for i, f_name in enumerate(prediction_files):
             predicted_xs = []
             predicted_theta_js = []
