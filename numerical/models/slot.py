@@ -10,23 +10,25 @@ import common.util.file_utils as file
 import scipy.sparse
 
 # ps = [8]
-w = 2.2
-h = 2.7
-q = 3.84
-ps = np.linspace(-6 * w / 2, 6 * w / 2, 500)
+w = 2
+h = 4
+q = 10
+ps = np.linspace(-6 * w / 2, 6 * w / 2, 100)
 
 save_to_file = False
 calculate_error = False
 
 m_0 = 1
 n = 5000
+density_ratio = 0.25
+w_thresh = 6
 
 if not os.path.exists("model_outputs/slot".format(n)) and save_to_file:
     os.makedirs("model_outputs/slot".format(n))
 
 # centroids, normals, areas = gen.gen_slot(n=n, h=h, w=w, length=50, depth=50)
-centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50, w_thresh=6,
-                                                density_ratio=0.25)
+centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50, w_thresh=w_thresh,
+                                                density_ratio=density_ratio)
 print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
 # plot_3d_point_sets([centroids])
 R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
@@ -55,7 +57,7 @@ else:
     points[:, 0] = ps
     points[:, 1] = q
     points[:, 2] = 0
-    vels = bem.get_jet_dirs(points, centroids, normals, areas, m_0, R_inv)
+    vels = bem.get_jet_dirs(points, centroids, normals, areas, m_0, R_inv, verbose=True)
     theta_js = np.arctan2(vels[:, 1], vels[:, 0]) + 0.5 * np.pi
 
 fig = plt.figure()
@@ -75,4 +77,11 @@ if save_to_file:
     arr = []
     for i in range(len(p_bars)):
         arr.append([p_bars[i], theta_js[i]])
-    file.array_to_csv("", f"model_outputs/slot/w{w:.2f}h{h:.2f}q{q:.2f}_bem_slot_prediction_{n}.csv", arr)
+    file_path = f"model_outputs/slot/w{w:.2f}h{h:.2f}q{q:.2f}_bem_slot_prediction_{n}_{density_ratio}_{w_thresh}.csv"
+    alph = "abcdefgh"
+    i = 0
+    while os.path.exists(file_path):
+        file_path = f"model_outputs/slot/w{w:.2f}h{h:.2f}q{q:.2f}_bem_slot_prediction_{n}_{density_ratio}_{w_thresh}" \
+                    f"{alph[i]}.csv"
+        i += 1
+    file.array_to_csv("", file_path, arr)
