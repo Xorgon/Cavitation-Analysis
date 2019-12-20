@@ -33,7 +33,7 @@ readings = [r for r in readings if r.m_y == m_y]
 
 m_xs = set(sorted([r.m_x for r in readings]))
 
-limits = (-4, 4)
+limits = (-8, 5)
 
 xs = []
 ys = []
@@ -54,11 +54,11 @@ for m_x in m_xs:
 # From analyse_slot.py TODO: Get these parameters written to a file during analyse_slot (params.py would be nice)
 theta_j_offset = -0.0048
 p_bar_offset = -0.0777
-xs = np.array(xs) - p_bar_offset
+xs = np.array(xs) - p_bar_offset * params.slot_width / 2
 angles = np.arctan2(vs, us) + np.pi / 2 - theta_j_offset
 
 initialize_plt()
-plt.figure(figsize=(5.31445, 4.2))
+plt.figure(figsize=(5.31445, 2.4))
 plt.quiver(xs, ys, np.sin(angles), -np.cos(angles),
            np.abs(angles), units='xy', scale=1 / (0.8 * np.mean(ys)), cmap=cm.get_cmap('winter'))  # winter or copper
 plt.gca().set_aspect('equal', adjustable='box')
@@ -66,10 +66,11 @@ plt.gca().set_aspect('equal', adjustable='box')
 plt.plot([min(xs), -w / 2, -w / 2, w / 2, w / 2, max(xs)],
          [0, 0, -params.slot_height, -params.slot_height, 0, 0],
          "k", linewidth=4)
-plt.tight_layout()
 plt.subplots_adjust(left=0.1, bottom=0.1)
 plt.xlabel("$p$ (mm)")
 plt.ylabel("$q$ (mm)")
 plt.xlim(limits)
+plt.colorbar(label="$|\\theta_j|$", shrink=0.9)
+plt.tight_layout()
 
 plt.show()
