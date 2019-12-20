@@ -125,14 +125,17 @@ def test_run_analysis():
     R_b = get_R_vector(bubble, centroids, normals)
     R_mat = get_R_matrix(centroids, normals, areas)
     R_inv = np.linalg.inv(R_mat)
-    source_densities = m_0 * np.dot(R_inv, R_b)
+    source_densities = calculate_sigma(bubble, centroids, normals, areas, m_0, R_inv, R_b)
     # pu.plot_3d_points(centroids, source_densities)
     # print(source_densities)
     res_vel = get_vel(bubble, centroids, areas, source_densities, m_0=m_0)
     print("Resultant velocity = ", res_vel)
     assert (np.all([math.isclose(res_vel[0], 0, abs_tol=1e-16), math.isclose(res_vel[2], 0, abs_tol=1e-16)]))
-    assert (res_vel[1] > 0)
+    assert (res_vel[1] < 0)
 
 
 if __name__ == "__main__":
-    test_run_analysis()
+    centroids, normals, areas = gen.gen_slot(10000)
+    bubble = np.array([0, 1, 0])
+    m_0 = 1
+    R_mat = get_R_matrix(centroids, normals, areas)
