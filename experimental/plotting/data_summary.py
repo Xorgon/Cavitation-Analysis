@@ -6,7 +6,7 @@ from common.util.plotting_utils import initialize_plt
 import numpy as np
 import matplotlib.pyplot as plt
 
-dirs = []
+dirs = ["../../../../Data/SlotErrorMeasurement/"]
 root_dir = "../../../../Data/SlotSweeps"
 for root, _, files in os.walk(root_dir):
     if "params.py" in files:
@@ -18,7 +18,7 @@ q_over_ws = []
 cs = []
 
 q_dict = {}
-colors = ["c", "b", "y", "r", "g", "orange", "purple"]
+colors = ["c", "b", "y", "r", "g", "m", "orange", "purple"]
 for i, dir_path in enumerate(dirs):
     sys.path.append(dir_path)
     import params
@@ -59,7 +59,7 @@ for i, dir_path in enumerate(dirs):
             q_over_ws.append(mean_q / params.slot_width)
             cs.append(colors[i])
 
-initialize_plt()
+initialize_plt(font_size=14, line_scale=2)
 plt.figure()
 plt.scatter(h_over_ws, q_over_ws, c=cs, marker="s")
 plt.xlabel("$h / w$")
