@@ -24,6 +24,7 @@ class Reading:
     repeat_number = None
 
     disp_vect = None  # Bubble displacement vector
+    sup_disp_vect = None  # Displacement vector between minima as in Supponen et al. (2016)
     bubble_pos = None  # Bubble position in the frame (px coords)
     max_bubble_area = None  # Maximum bubble area (pixels)
     sec_max_area = None  # Second maximum of bubble area (pixels)
@@ -40,7 +41,8 @@ class Reading:
         return f"{self.idx}:{self.repeat_number},{self.m_x},{self.m_y},{self.m_z}," \
                f"{self.disp_vect[0]},{self.disp_vect[1]}," \
                f"{self.bubble_pos[0]},{self.bubble_pos[1]}," \
-               f"{self.max_bubble_area},{self.sec_max_area},{self.inter_max_frames}"
+               f"{self.max_bubble_area},{self.sec_max_area},{self.inter_max_frames}," \
+               f"{self.sup_disp_vect[0]},{self.sup_disp_vect[1]}"
 
     def get_bubble_pos_mm(self, mm_per_px, frame_height=264):
         return np.array([self.bubble_pos[0] * mm_per_px + self.m_x,
@@ -74,9 +76,11 @@ class Reading:
         reading.disp_vect = np.array([float(split[4]), float(split[5])])
         reading.bubble_pos = np.array([float(split[6]), float(split[7])])
         reading.max_bubble_area = np.array(int(split[8]))
-        if len(split) == 11:  # Only include newer metrics if available
+        if len(split) > 9:  # Only include newer metrics if available
             reading.sec_max_area = np.array(int(split[9]))
             reading.inter_max_frames = np.array(int(split[10]))
+        if len(split) > 11:  # Only include even newer metrics if available
+            reading.sup_disp_vect = np.array([float(split[11]), float(split[12])])
         return reading
 
 
@@ -205,7 +209,8 @@ def calculate_displacement(frames, frame_rate, trigger_out_delay, save_path=None
     :param save_path: Path in which to save the analysis plot, if None does not save.
     :param repeat_num: Number of the repeat, used to save the analysis plot for movies with multiple repeats.
     :param laser_delay: Laser delay
-    :return: displacement vector [x, y], initial bubble centroid [x, y], max area, second max area, inter-max frames
+    :return: displacement vector [x, y], initial bubble centroid [x, y], max area, second max area, inter-max frames,
+        Supponen displacement vector [x, y]
     """
     xs = []
     ys = []
@@ -244,11 +249,17 @@ def calculate_displacement(frames, frame_rate, trigger_out_delay, save_path=None
         dx = xs[peak_idxs[1]] - xs[peak_idxs[0]]
         dy = ys[peak_idxs[1]] - ys[peak_idxs[0]]
 
+        min_idx = np.argmin(areas[peak_idxs[0]:peak_idxs[1]]) + peak_idxs[0]
+
+        # Collapse minimum subtract initial.
+        sup_dx = xs[min_idx] - xs[0]
+        sup_dy = ys[min_idx] - ys[0]
+
         if save_path is not None:
             plot_analysis(areas, xs, ys, dx, dy, idxs, save_path, frames, frame_rate, repeat_number=repeat_num)
 
         return [dx, dy], [xs[peak_idxs[0]], ys[peak_idxs[0]]], areas[peak_idxs[0]], areas[peak_idxs[1]], \
-               peak_idxs[1] - peak_idxs[0]
+               peak_idxs[1] - peak_idxs[0], [sup_dx, sup_dy]
     else:
         print("Warning: Less than two area peaks found.")
         return None
@@ -282,23 +293,26 @@ def analyse_reading(dir_path, return_mean=False):
     areas = []
     sec_areas = []
     inter_max_frames = []
+    sup_disps = []
     for i in range(repeats):
         frames = list(movie[i * 100: (i + 1) * 100])
         disp_out = calculate_displacement(frames, frame_rate, trigger_out_delay, save_path=dir_path, repeat_num=i)
 
         if disp_out is not None:
-            disp, pos, area, sec_area, imf = disp_out
+            disp, pos, area, sec_area, imf, sup_disp = disp_out
             disps.append(disp)
             positions.append(pos)
             areas.append(area)
             sec_areas.append(sec_area)
             inter_max_frames.append(imf)
+            sup_disps.append(sup_disp)
         else:
             disps.append(None)
             positions.append(None)
             areas.append(None)
             sec_areas.append(None)
             inter_max_frames.append(None)
+            sup_disps.append(None)
 
     movie.close()
 
@@ -307,7 +321,7 @@ def analyse_reading(dir_path, return_mean=False):
         mean_pos = np.mean([p for p in positions if p is not None], axis=1)
         return mean_disp, mean_pos
     else:
-        return disps, positions, areas, sec_areas, inter_max_frames
+        return disps, positions, areas, sec_areas, inter_max_frames, sup_disps
 
 
 def analyse_series(dir_path, frame_shape=(384, 264)):
@@ -356,7 +370,7 @@ def analyse_series(dir_path, frame_shape=(384, 264)):
         reading_path = dir_path + reading_prefix + str(input_data[i][2]).rjust(4, "0") + "/"
         to_write = 0
 
-        disps, positions, areas, sec_areas, inter_max_frames = analyse_reading(reading_path, False)
+        disps, positions, areas, sec_areas, inter_max_frames, sup_disps = analyse_reading(reading_path, False)
         for d in range(len(disps)):
             reading = Reading(input_data[i][2], d, m_x=input_data[i][0], m_y=input_data[i][1])
             # reading = input_data[i].copy()
@@ -371,6 +385,7 @@ def analyse_series(dir_path, frame_shape=(384, 264)):
             reading.max_bubble_area = areas[d]
             reading.sec_max_area = sec_areas[d]
             reading.inter_max_frames = inter_max_frames[d]
+            reading.sup_disp_vect = sup_disps[d]
 
             readings.append(reading)
             to_write += 1
@@ -382,6 +397,10 @@ def analyse_series(dir_path, frame_shape=(384, 264)):
                 dump_file.write(str(reading) + "\n")
         dump_file.close()
 
+    try:
+        flag_invalid_readings(dir_path)
+    except ValueError:
+        print(f"Could not flag invalid readings in {dir_path}")
     return readings
 
 
