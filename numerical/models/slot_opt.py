@@ -8,18 +8,19 @@ import scipy.sparse
 import matplotlib.pyplot as plt
 
 
-def find_slot_peak(w, q, h, n=10000, length=50, depth=50, varied_slot_density_ratio=1.0, density_w_thresh=12):
-    m_0 = 1
-
-    if varied_slot_density_ratio == 1:
-        centroids, normals, areas = gen.gen_slot(n=n, h=h, w=w, length=length, depth=depth)
-    else:
-        centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50, w_thresh=density_w_thresh,
-                                                        density_ratio=varied_slot_density_ratio)
-    print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
-    n = len(centroids)
-    R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
-    R_inv = scipy.linalg.inv(R_matrix)
+def find_slot_peak(w, q, h, n=10000, length=50, depth=50, varied_slot_density_ratio=1.0, density_w_thresh=12,
+                   centroids=None, normals=None, areas=None, R_inv=None, m_0=1):
+    if centroids is None or normals is None or areas is None or R_inv is None:
+        if varied_slot_density_ratio == 1:
+            centroids, normals, areas = gen.gen_slot(n=n, h=h, w=w, length=length, depth=depth)
+        else:
+            centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=length, depth=depth,
+                                                            w_thresh=density_w_thresh,
+                                                            density_ratio=varied_slot_density_ratio)
+        print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
+        n = len(centroids)
+        R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
+        R_inv = scipy.linalg.inv(R_matrix)
 
     def get_theta_j(p):
         res_vel, _ = bem.get_jet_dir_and_sigma([p, q, 0], centroids, normals, areas, m_0=m_0, R_inv=R_inv)
@@ -30,9 +31,15 @@ def find_slot_peak(w, q, h, n=10000, length=50, depth=50, varied_slot_density_ra
     mid_theta_j = math.atan2(mid_res_vel[1], mid_res_vel[0]) + math.pi / 2
     mid_grad = 2 * mid_theta_j / 0.1  # Approximate gradient of middle
 
-    res = minimize_scalar(get_theta_j)
+    try:
+        res = minimize_scalar(get_theta_j, bracket=(-length / 2, -w, 0),
+                              method='brent')  # Any correct peak must occur on the left half
+    except ValueError:
+        print(f"Peak not found in interval, returning NaN. w={w}  q={q}  h={h}  n={n}")
+        return np.nan, np.nan, np.nan, np.nan
     if res.success:
-        print(f"Optimization finished with {res.nfev} evaluations, w={w}  q={q}  h={h}  n={n}")
+        print(f"Optimization finished with {res.nfev} evaluations, w={w}  q={q}  h={h}  n={n}, "
+              f"theta_star={-res.fun:.3f} p_bar_star={-res.x:.3f}")
         return n, -res.x, -res.fun, mid_grad  # Take the right peak rather than the left peak that was found.
     else:
         print(f"Optimization failed, w={w}  q={q}  h={h}  n={n}")
