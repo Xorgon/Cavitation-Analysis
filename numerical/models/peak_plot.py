@@ -35,25 +35,32 @@ def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, 
         p_bar_star_surf.set_clim(np.nanmin(p_bar_star_mat), np.nanmax(p_bar_star_mat))
         p_bar_star_fig.colorbar(p_bar_star_surf)
 
-    plt.figure()
-    plt.contourf(h_over_w_mat, q_over_w_mat, theta_star_mat, levels=10)
+    initialize_plt()
+    fig, axes = plt.subplots(1, 2, figsize=(5.31445, 3.5))
+    plt.sca(axes[0])
+    cnt = plt.contourf(h_over_w_mat, q_over_w_mat, theta_star_mat, levels=10)
+    for c in cnt.collections:
+        c.set_edgecolor("face")  # Reduce aliasing in output.
     plt.xlabel("$h / w$")
     plt.ylabel("$q / w$")
-    plt.colorbar(label="$\\theta_j^\\star$")
-    plt.tight_layout()
+    cbar = plt.colorbar(label="$\\theta_j^\\star$", orientation='horizontal')
+    cbar.ax.set_xticklabels(cbar.ax.get_xticklabels(), rotation='45')
 
-    plt.figure()
-    plt.contourf(h_over_w_mat, q_over_w_mat, p_bar_star_mat, levels=16)
+    plt.sca(axes[1])
+    cnt = plt.contourf(h_over_w_mat, q_over_w_mat, p_bar_star_mat, levels=16)
+    for c in cnt.collections:
+        c.set_edgecolor("face")  # Reduce aliasing in output.
     plt.xlabel("$h / w$")
     plt.ylabel("$q / w$")
-    plt.colorbar(label="$\\bar{p}^\\star$")
-    plt.tight_layout()
+    cbar = plt.colorbar(label="$\\bar{p}^\\star$", orientation='horizontal')
+    cbar.ax.set_xticklabels(cbar.ax.get_xticklabels(), rotation='45')
 
+    plt.tight_layout()
     plt.show()
 
 
 if __name__ == "__main__":
-    n = 15000
+    n = 20000
     n_points = 16
     save_file = open(f"model_outputs/peak_sweep_{n}_{n_points}x{n_points}.csv", 'r')
 
@@ -73,4 +80,4 @@ if __name__ == "__main__":
     theta_star_mat = np.reshape(theta_stars, (n_points, n_points))
     p_bar_star_mat = np.reshape(p_bar_stars, (n_points, n_points))
 
-    plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, plot_3d=True)
+    plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, plot_3d=False)
