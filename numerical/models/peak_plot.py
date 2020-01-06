@@ -1,37 +1,60 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
+import scipy.interpolate as interp
 
 from common.util.plotting_utils import initialize_plt
 
 
-def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat):
-    # TODO: Fix colours on these plots.
-    # theta_star_mat = np.nan_to_num(theta_star_mat)
-    # p_bar_star_mat = np.nan_to_num(p_bar_star_mat)
-    initialize_plt(font_size=14, line_scale=2)
-    theta_star_fig = plt.figure()
-    ax = plt.gca(projection='3d')  # type: Axes3D
-    theta_star_surf = ax.plot_surface(h_over_w_mat, q_over_w_mat, theta_star_mat)
-    ax.set_xlabel("$h / w$")
-    ax.set_ylabel("$q / w$")
-    ax.set_zlabel("$\\theta_j^\\star$")
-    theta_star_fig.colorbar(theta_star_surf)
-    plt.show()
+def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, plot_3d=False):
+    if plot_3d:
+        theta_star_mat_no_nan = np.nan_to_num(theta_star_mat)
+        tsm_interp = interp.interp2d(h_over_w_mat, q_over_w_mat, theta_star_mat_no_nan, kind='linear', copy=False)
+        points_fact = 10
+        how_new = np.linspace(np.min(h_over_w_mat), np.max(h_over_w_mat), h_over_w_mat.shape[0] * points_fact)
+        qow_new = np.linspace(np.min(q_over_w_mat), np.max(q_over_w_mat), q_over_w_mat.shape[0] * points_fact)
+        how_new_mat, qow_new_mat = np.meshgrid(how_new, qow_new)
+        tsm_new = tsm_interp(how_new, qow_new)
 
-    p_bar_star_fig = plt.figure()
-    ax = plt.gca(projection='3d')  # type: Axes3D
-    p_bar_star_surf = ax.plot_surface(h_over_w_mat, q_over_w_mat, p_bar_star_mat)
-    ax.set_xlabel("$h / w$")
-    ax.set_ylabel("$q / w$")
-    ax.set_zlabel("$\\bar{p}^\\star$")
-    p_bar_star_fig.colorbar(p_bar_star_surf)
+        initialize_plt(font_size=14, line_scale=2)
+        theta_star_fig = plt.figure()
+        ax = plt.gca(projection='3d')  # type: Axes3D
+        theta_star_surf = ax.plot_surface(how_new_mat, qow_new_mat, tsm_new, cmap=plt.cm.get_cmap('coolwarm'))
+        ax.set_xlabel("$h / w$")
+        ax.set_ylabel("$q / w$")
+        ax.set_zlabel("$\\theta_j^\\star$")
+        theta_star_surf.set_clim(np.nanmin(theta_star_mat), np.nanmax(theta_star_mat))
+        theta_star_fig.colorbar(theta_star_surf)
+
+        p_bar_star_fig = plt.figure()
+        ax = plt.gca(projection='3d')  # type: Axes3D
+        p_bar_star_surf = ax.plot_surface(h_over_w_mat, q_over_w_mat, p_bar_star_mat, cmap=plt.cm.get_cmap('coolwarm'))
+        ax.set_xlabel("$h / w$")
+        ax.set_ylabel("$q / w$")
+        ax.set_zlabel("$\\bar{p}^\\star$")
+        p_bar_star_surf.set_clim(np.nanmin(p_bar_star_mat), np.nanmax(p_bar_star_mat))
+        p_bar_star_fig.colorbar(p_bar_star_surf)
+
+    plt.figure()
+    plt.contourf(h_over_w_mat, q_over_w_mat, theta_star_mat, levels=10)
+    plt.xlabel("$h / w$")
+    plt.ylabel("$q / w$")
+    plt.colorbar(label="$\\theta_j^\\star$")
+    plt.tight_layout()
+
+    plt.figure()
+    plt.contourf(h_over_w_mat, q_over_w_mat, p_bar_star_mat, levels=16)
+    plt.xlabel("$h / w$")
+    plt.ylabel("$q / w$")
+    plt.colorbar(label="$\\bar{p}^\\star$")
+    plt.tight_layout()
+
     plt.show()
 
 
 if __name__ == "__main__":
-    n = 10000
-    n_points = 4
+    n = 15000
+    n_points = 16
     save_file = open(f"model_outputs/peak_sweep_{n}_{n_points}x{n_points}.csv", 'r')
 
     all_h_over_ws = []
@@ -50,4 +73,4 @@ if __name__ == "__main__":
     theta_star_mat = np.reshape(theta_stars, (n_points, n_points))
     p_bar_star_mat = np.reshape(p_bar_stars, (n_points, n_points))
 
-    plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat)
+    plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, plot_3d=True)
