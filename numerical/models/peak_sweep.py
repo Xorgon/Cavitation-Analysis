@@ -12,6 +12,12 @@ w = 2
 hs = np.linspace(1, 10, n_points)
 qs = np.linspace(1, 10, n_points)
 
+print(f"hs = {hs}")
+print(f"qs = {qs}")
+
+last_h = 5.8
+last_q = 10.0
+
 n = 20000
 w_thresh = 6
 density_ratio = 0.25
@@ -24,15 +30,20 @@ p_bar_stars = []
 save_file = open(f"model_outputs/peak_sweep_{n}_{n_points}x{n_points}.csv", 'a')
 
 for h in hs:
+    if last_h is not None and (h < last_h or (np.isclose(h, last_h) and np.isclose(last_q, np.max(qs)))):
+        continue  # Skip already completed slots.
     centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50,
                                                     w_thresh=w_thresh,
                                                     density_ratio=density_ratio)
-    print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
-    n = len(centroids)
+    print("Requested n = {0}, using n = {1} for h = {2}, w = {3}.".format(n, len(centroids), h, w))
+    actual_n = len(centroids)
     R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
     R_inv = scipy.linalg.inv(R_matrix)
     for q in qs:
-        _, p, theta_j, _ = find_slot_peak(w, q, h, n,
+        if last_h is not None and last_q is not None and np.isclose(h, last_h) and \
+                (q < last_q or np.isclose(q, last_q)):
+            continue  # Skip already completed positions in the last completed slot.
+        _, p, theta_j, _ = find_slot_peak(w, q, h, actual_n,
                                           varied_slot_density_ratio=density_ratio, density_w_thresh=w_thresh,
                                           centroids=centroids, normals=normals, areas=areas, R_inv=R_inv)
         all_h_over_ws.append(h / w)
