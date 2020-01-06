@@ -1,19 +1,18 @@
 import numpy as np
 import scipy
+import os
 
 from numerical.models.slot_opt import find_slot_peak
 import numerical.util.gen_utils as gen
 import numerical.bem as bem
 from numerical.models.peak_plot import plot_peak_sweep
 
-# TODO: Run this next
-
 n_points = 16
 w = 2
 hs = np.linspace(1, 10, n_points)
 qs = np.linspace(1, 10, n_points)
 
-n = 15000
+n = 20000
 w_thresh = 6
 density_ratio = 0.25
 
@@ -41,6 +40,10 @@ for h in hs:
         theta_stars.append(theta_j)
         p_bar_stars.append(2 * p / w)
         save_file.write(f"{h / w},{q / w},{theta_j},{2 * p / w}\n")
+
+        # Make sure the data is saved to disk every time.
+        save_file.flush()
+        os.fsync(save_file.fileno())
 
 save_file.close()
 
