@@ -26,6 +26,16 @@ def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, 
         theta_star_surf.set_clim(np.nanmin(theta_star_mat), np.nanmax(theta_star_mat))
         theta_star_fig.colorbar(theta_star_surf)
 
+        log_theta_star_fig = plt.figure()
+        ax = plt.gca(projection='3d')  # type: Axes3D
+        log_theta_star_surf = ax.plot_surface(np.log10(h_over_w_mat), np.log10(q_over_w_mat), np.log10(theta_star_mat),
+                                          cmap=plt.cm.get_cmap('coolwarm'))
+        ax.set_xlabel("$log_{10}(h / w)$")
+        ax.set_ylabel("$log_{10}(q / w)$")
+        ax.set_zlabel("$log_{10}(\\theta_j^\\star)$")
+        log_theta_star_surf.set_clim(np.nanmin(theta_star_mat), np.nanmax(theta_star_mat))
+        log_theta_star_fig.colorbar(log_theta_star_surf)
+
         p_bar_star_fig = plt.figure()
         ax = plt.gca(projection='3d')  # type: Axes3D
         p_bar_star_surf = ax.plot_surface(h_over_w_mat, q_over_w_mat, p_bar_star_mat, cmap=plt.cm.get_cmap('coolwarm'))
@@ -56,6 +66,25 @@ def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, 
     cbar.ax.set_xticklabels(cbar.ax.get_xticklabels(), rotation='45')
 
     plt.tight_layout()
+    # plt.show()
+
+    initialize_plt(font_size=14, line_scale=2)
+    plt.figure()
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.scatter(q_over_w_mat, theta_star_mat, c=h_over_w_mat)
+    plt.xlabel('$q / w$')
+    plt.ylabel('$\\theta_j^\\star$')
+    plt.colorbar(label="$h / w$")
+
+    plt.figure()
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.scatter(h_over_w_mat, theta_star_mat, c=q_over_w_mat)
+    plt.xlabel('$h / w$')
+    plt.ylabel('$\\theta_j^\\star$')
+    plt.colorbar(label="$q / w$")
+
     plt.show()
 
 
@@ -80,4 +109,4 @@ if __name__ == "__main__":
     theta_star_mat = np.reshape(theta_stars, (n_points, n_points))
     p_bar_star_mat = np.reshape(p_bar_stars, (n_points, n_points))
 
-    plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, plot_3d=False)
+    plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, plot_3d=True)
