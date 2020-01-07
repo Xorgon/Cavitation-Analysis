@@ -15,8 +15,8 @@ qs = np.linspace(1, 10, n_points)
 print(f"hs = {hs}")
 print(f"qs = {qs}")
 
-last_h = 5.8
-last_q = 10.0
+last_h = None
+last_q = None
 
 n = 20000
 w_thresh = 6
@@ -57,10 +57,3 @@ for h in hs:
         os.fsync(save_file.fileno())
 
 save_file.close()
-
-h_over_w_mat = np.reshape(all_h_over_ws, (n_points, n_points))
-q_over_w_mat = np.reshape(all_q_over_ws, (n_points, n_points))
-theta_star_mat = np.reshape(theta_stars, (n_points, n_points))
-p_bar_star_mat = np.reshape(p_bar_stars, (n_points, n_points))
-
-plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat)
