@@ -48,7 +48,7 @@ def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, 
     initialize_plt()
     fig, axes = plt.subplots(1, 2, figsize=(5.31445, 3.5))
     plt.sca(axes[0])
-    cnt = plt.contourf(h_over_w_mat, q_over_w_mat, theta_star_mat, levels=10)
+    cnt = plt.contourf(h_over_w_mat, q_over_w_mat, theta_star_mat, levels=16)
     for c in cnt.collections:
         c.set_edgecolor("face")  # Reduce aliasing in output.
     plt.xlabel("$h / w$")
