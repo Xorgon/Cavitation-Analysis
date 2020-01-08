@@ -5,7 +5,6 @@ import os
 from numerical.models.slot_opt import find_slot_peak
 import numerical.util.gen_utils as gen
 import numerical.bem as bem
-from numerical.models.peak_plot import plot_peak_sweep
 
 n_points = 16
 w = 2
