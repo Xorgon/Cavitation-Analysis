@@ -53,7 +53,7 @@ def get_R_matrix(centroids, normals, areas, dtype=np.float32):
     n_mat = np.broadcast_to(np.expand_dims(normals, 1), (len(ps), len(qs), 3))
 
     # Expand areas into an n x n matrix.
-    a_mat = np.broadcast_to(np.expand_dims(areas, 1), (len(ps), len(qs)))
+    a_mat = np.broadcast_to(np.expand_dims(areas, 0), (len(ps), len(qs)))
 
     # p - q
     res_mat = np.subtract(ps, qs, dtype=dtype)  # dif_mat
@@ -64,7 +64,7 @@ def get_R_matrix(centroids, normals, areas, dtype=np.float32):
     # n . (p - q)
     res_mat = np.einsum('...k,...k', n_mat, res_mat)  # n_dot_dif
 
-    # a * (n . (p - q)) / (4 * pi * |p - q| ^ 3)
+    # a_q * (n_p . (p - q)) / (4 * pi * |p - q| ^ 3)
     res_mat = np.divide(a_mat * res_mat, (4 * np.pi * r_mat ** 3), where=r_mat != 0, dtype=dtype)
 
     # Set diagonal to value obtained from integrating over the singularity in a panel (the effect on itself).
