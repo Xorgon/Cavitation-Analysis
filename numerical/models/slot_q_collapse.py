@@ -44,21 +44,19 @@ norm_ax.set_xlim(-5.5, 5.5)
 norm_ax.set_ylim(-1.1, 1.1)
 p_bars = ps / (0.5 * w)
 
+centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50, w_thresh=12, density_ratio=0.25)
+print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
+print(np.mean(centroids, 0))
+R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
+R_inv = np.linalg.inv(R_matrix)
 for i, q in enumerate(qs):
-    centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50, w_thresh=12, density_ratio=0.25)
-    # centroids, normals, areas = gen.gen_slot(n=n, h=h, w=w, length=50, depth=50)
-    print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
-    # pu.plot_3d_point_sets([centroids])
-    print(np.mean(centroids, 0))
-    R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
-    R_inv = np.linalg.inv(R_matrix)
-
     print(f"Testing q = {q}")
-    theta_js = []
-    for p in ps:
-        res_vel, sigma = bem.get_jet_dir_and_sigma([p, q, 0], centroids, normals, areas, m_0=m_0, R_inv=R_inv)
-        # pu.plot_flow([p, q, 0], cs, ns, sinks, R=R_matrix)
-        theta_js.append(math.atan2(res_vel[1], res_vel[0]) + math.pi / 2)
+    points = np.empty((len(ps), 3))
+    points[:, 0] = ps
+    points[:, 1] = q
+    points[:, 2] = 0
+    vels = bem.get_jet_dirs(points, centroids, normals, areas, m_0, R_inv, verbose=True)
+    theta_js = np.arctan2(vels[:, 1], vels[:, 0]) + 0.5 * np.pi
 
     p_bar_to_plot = p_bars
     theta_j_to_plot = theta_js
