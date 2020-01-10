@@ -6,7 +6,8 @@ import scipy.interpolate as interp
 from common.util.plotting_utils import initialize_plt
 
 
-def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, plot_3d=False):
+def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, plot_3d=False, plot_logs=False,
+                    how_range=None, qow_range=None):
     if plot_3d:
         theta_star_mat_no_nan = np.nan_to_num(theta_star_mat)
         tsm_interp = interp.interp2d(h_over_w_mat, q_over_w_mat, theta_star_mat_no_nan, kind='linear', copy=False)
@@ -29,7 +30,7 @@ def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, 
         log_theta_star_fig = plt.figure()
         ax = plt.gca(projection='3d')  # type: Axes3D
         log_theta_star_surf = ax.plot_surface(np.log10(h_over_w_mat), np.log10(q_over_w_mat), np.log10(theta_star_mat),
-                                          cmap=plt.cm.get_cmap('coolwarm'))
+                                              cmap=plt.cm.get_cmap('coolwarm'))
         ax.set_xlabel("$log_{10}(h / w)$")
         ax.set_ylabel("$log_{10}(q / w)$")
         ax.set_zlabel("$log_{10}(\\theta_j^\\star)$")
@@ -65,25 +66,32 @@ def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, 
     cbar = plt.colorbar(label="$\\bar{p}^\\star$", orientation='horizontal')
     cbar.ax.set_xticklabels(cbar.ax.get_xticklabels(), rotation='45')
 
+    for axis in axes:
+        if how_range is not None:
+            axis.set_xlim(how_range)
+        if qow_range is not None:
+            axis.set_ylim(qow_range)
+
     plt.tight_layout()
     # plt.show()
 
-    initialize_plt(font_size=14, line_scale=2)
-    plt.figure()
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.scatter(q_over_w_mat, theta_star_mat, c=h_over_w_mat)
-    plt.xlabel('$q / w$')
-    plt.ylabel('$\\theta_j^\\star$')
-    plt.colorbar(label="$h / w$")
+    if plot_logs:
+        initialize_plt(font_size=14, line_scale=2)
+        plt.figure()
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.scatter(q_over_w_mat, theta_star_mat, c=h_over_w_mat)
+        plt.xlabel('$q / w$')
+        plt.ylabel('$\\theta_j^\\star$')
+        plt.colorbar(label="$h / w$")
 
-    plt.figure()
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.scatter(h_over_w_mat, theta_star_mat, c=q_over_w_mat)
-    plt.xlabel('$h / w$')
-    plt.ylabel('$\\theta_j^\\star$')
-    plt.colorbar(label="$q / w$")
+        plt.figure()
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.scatter(h_over_w_mat, theta_star_mat, c=q_over_w_mat)
+        plt.xlabel('$h / w$')
+        plt.ylabel('$\\theta_j^\\star$')
+        plt.colorbar(label="$q / w$")
 
     plt.show()
 
@@ -104,9 +112,27 @@ if __name__ == "__main__":
         theta_stars.append(float(split[2]))
         p_bar_stars.append(float(split[3]))
 
-    h_over_w_mat = np.reshape(all_h_over_ws, (n_points, n_points))
-    q_over_w_mat = np.reshape(all_q_over_ws, (n_points, n_points))
-    theta_star_mat = np.reshape(theta_stars, (n_points, n_points))
-    p_bar_star_mat = np.reshape(p_bar_stars, (n_points, n_points))
+    if len(all_h_over_ws) == n_points ** 2:
+        h_over_w_mat = np.reshape(all_h_over_ws, (n_points, n_points))
+        q_over_w_mat = np.reshape(all_q_over_ws, (n_points, n_points))
+        theta_star_mat = np.reshape(theta_stars, (n_points, n_points))
+        p_bar_star_mat = np.reshape(p_bar_stars, (n_points, n_points))
+    else:
+        h_over_w_mat = np.empty((n_points, n_points))
+        h_over_w_mat.fill(np.nan)
+        q_over_w_mat = np.empty((n_points, n_points))
+        q_over_w_mat.fill(np.nan)
+        theta_star_mat = np.empty((n_points, n_points))
+        theta_star_mat.fill(np.nan)
+        p_bar_star_mat = np.empty((n_points, n_points))
+        p_bar_star_mat.fill(np.nan)
+        for k in range(len(all_h_over_ws)):
+            i = int(np.floor(k / n_points))
+            j = int(k % n_points)
+            h_over_w_mat[i, j] = all_h_over_ws[k]
+            q_over_w_mat[i, j] = all_q_over_ws[k]
+            theta_star_mat[i, j] = theta_stars[k]
+            p_bar_star_mat[i, j] = p_bar_stars[k]
 
-    plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, plot_3d=True)
+    plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, plot_3d=False, plot_logs=False,
+                    how_range=(0.5, 5), qow_range=(0.5, 5))
