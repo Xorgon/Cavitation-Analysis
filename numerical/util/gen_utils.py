@@ -138,7 +138,7 @@ def gen_slot(n=3000, h=5, w=5, length=50, depth=50):
     return centroids, normals, areas
 
 
-def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_ratio=0.5, save_to_files=False):
+def gen_varied_slot(n=3000, h=3, w=2, length=50, depth=50, w_thresh=6, density_ratio=0.25, save_to_files=False):
     """
     Generates a slot with varying panel density.
 
@@ -147,7 +147,7 @@ def gen_varied_slot(n=3000, h=5, w=5, length=50, depth=50, w_thresh=2, density_r
     :param w: Slot width
     :param length: Geometry length
     :param depth: Geometry depth
-    :param w_thresh: w threshold at which to reduce density (density reduced starting after position w * w_thresh)
+    :param w_thresh: w threshold at which to reduce density (density reduced starting after position w_thresh * w / 2)
     :param density_ratio: Ratio of densities
     :return: centroids, normals, areas
     """
