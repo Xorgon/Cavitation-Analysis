@@ -55,69 +55,70 @@ def vel_to_angle(vel):
     return angle
 
 
-theta_j_sweeps = {}
-n = 10000
-dist = 5
-m_0 = 1
-n_theta_bs = 15
-normalize = True
+if __name__ == "__main__":
+    theta_j_sweeps = {}
+    n = 10000
+    dist = 5
+    m_0 = 1
+    n_theta_bs = 15
+    normalize = True
 
-colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
-color_idx = 0
-for peters_n in np.arange(2, 6, 1):
-    label = "Angle = $\\pi / " + str(peters_n) + "$"
-    print("Testing", label)
-    corner_angle = math.pi / peters_n
-    theta_bs = np.linspace(0.1, corner_angle - 0.1, n_theta_bs)
-    centroids, normals, areas = gen.gen_varied_corner(n, length=50, angle=corner_angle, depth=50, density_ratio=0.25,
-                                                      thresh=2 * dist)
-    # centroids, normals, areas = gen.gen_corner(n, length=50, angle=corner_angle, depth=50)
-    # pu.plot_3d_point_sets([centroids])
-    # print(normals)
-    # print(areas)
-    print("Creating R matrix")
-    R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
-    R_inv = inv(R_matrix)
+    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    color_idx = 0
+    for peters_n in np.arange(2, 6, 1):
+        label = "Angle = $\\pi / " + str(peters_n) + "$"
+        print("Testing", label)
+        corner_angle = math.pi / peters_n
+        theta_bs = np.linspace(0.1, corner_angle - 0.1, n_theta_bs)
+        centroids, normals, areas = gen.gen_varied_corner(n, length=50, angle=corner_angle, depth=50,
+                                                          density_ratio=0.25, thresh=2 * dist)
+        # centroids, normals, areas = gen.gen_corner(n, length=50, angle=corner_angle, depth=50)
+        # pu.plot_3d_point_sets([centroids])
+        # print(normals)
+        # print(areas)
+        print("Creating R matrix")
+        R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
+        R_inv = inv(R_matrix)
 
-    condition_number_1 = np.linalg.norm(R_inv, 1) * np.linalg.norm(R_matrix, 1)
-    condition_number_inf = np.linalg.norm(R_inv, np.inf) * np.linalg.norm(R_matrix, np.inf)
-    print(f"Condition numbers: 1 norm = {condition_number_1}, inf norm = {condition_number_inf}")
+        condition_number_1 = np.linalg.norm(R_inv, 1) * np.linalg.norm(R_matrix, 1)
+        condition_number_inf = np.linalg.norm(R_inv, np.inf) * np.linalg.norm(R_matrix, np.inf)
+        print(f"Condition numbers: 1 norm = {condition_number_1}, inf norm = {condition_number_inf}")
 
-    color = colors[color_idx]
-    color_idx += 1
-    theta_j_sweeps[label] = [theta_bs, [], [], color, corner_angle]  # theta_bs, theta_j numerical, theta_j Peters
-    for theta_b in theta_bs:
-        print("    theta_b =", theta_b)
-        x = dist * math.cos(theta_b)
-        y = dist * math.sin(theta_b)
+        color = colors[color_idx]
+        color_idx += 1
+        theta_j_sweeps[label] = [theta_bs, [], [], color, corner_angle]  # theta_bs, theta_j numerical, theta_j Peters
+        for theta_b in theta_bs:
+            print("    theta_b =", theta_b)
+            x = dist * math.cos(theta_b)
+            y = dist * math.sin(theta_b)
 
-        # Numerical theta_j
-        R_b = bem.get_R_vector([x, y, 0], centroids, normals)
-        res_vel, sigma = bem.get_jet_dir_and_sigma([x, y, 0], centroids, normals, areas, m_0, R_inv=R_inv, R_b=R_b)
-        print("        max_res =", np.max(np.abs(R_b + np.dot(R_matrix, sigma))))
-        sigma_and_bubble = np.append(sigma, 1)
-        theta_j_sweeps[label][1].append(vel_to_angle(res_vel))
+            # Numerical theta_j
+            R_b = bem.get_R_vector([x, y, 0], centroids, normals)
+            res_vel, sigma = bem.get_jet_dir_and_sigma([x, y, 0], centroids, normals, areas, m_0, R_inv=R_inv, R_b=R_b)
+            print("        max_res =", np.max(np.abs(R_b + np.dot(R_matrix, sigma))))
+            sigma_and_bubble = np.append(sigma, 1)
+            theta_j_sweeps[label][1].append(vel_to_angle(res_vel))
 
-        # Analytic theta_j
-        res_vel = get_peters_corner_jet_dir([x, y], peters_n)
-        theta_j_sweeps[label][2].append(vel_to_angle(res_vel))
+            # Analytic theta_j
+            res_vel = get_peters_corner_jet_dir([x, y], peters_n)
+            theta_j_sweeps[label][2].append(vel_to_angle(res_vel))
 
-    theta_j_sweeps[label][0] /= corner_angle
+        theta_j_sweeps[label][0] /= corner_angle
 
-pu.initialize_plt()
-fig = plt.figure()
-fig.patch.set_facecolor('white')
-ax = plt.gca()
-legend_elements = [Line2D([0], [0], color='k', label="Analytic"),
-                   Line2D([0], [0], color='k', marker='o', linestyle="--", label="Numeric")]
-for label in sorted(theta_j_sweeps.keys()):
-    legend_elements.append(Line2D([0], [0], color=theta_j_sweeps[label][3], label=label))
-    ax.plot(theta_j_sweeps[label][0], theta_j_sweeps[label][1], theta_j_sweeps[label][3] + "o--", markersize=3)
-    ax.plot(theta_j_sweeps[label][0], theta_j_sweeps[label][2], theta_j_sweeps[label][3])
-    if not normalize:
-        ax.axhline(math.pi - theta_j_sweeps[label][4], color="gray", linestyle="--")
-ax.axhline(0, color="gray", linestyle="--")
-ax.set_xlabel("$\\theta_b$", fontsize=18)
-ax.set_ylabel("$\\theta_j$", fontsize=18)
-ax.legend(handles=legend_elements, loc=4)
-plt.show()
+    pu.initialize_plt()
+    fig = plt.figure()
+    fig.patch.set_facecolor('white')
+    ax = plt.gca()
+    legend_elements = [Line2D([0], [0], color='k', label="Analytic"),
+                       Line2D([0], [0], color='k', marker='o', linestyle="--", label="Numeric")]
+    for label in sorted(theta_j_sweeps.keys()):
+        legend_elements.append(Line2D([0], [0], color=theta_j_sweeps[label][3], label=label))
+        ax.plot(theta_j_sweeps[label][0], theta_j_sweeps[label][1], theta_j_sweeps[label][3] + "o--", markersize=3)
+        ax.plot(theta_j_sweeps[label][0], theta_j_sweeps[label][2], theta_j_sweeps[label][3])
+        if not normalize:
+            ax.axhline(math.pi - theta_j_sweeps[label][4], color="gray", linestyle="--")
+    ax.axhline(0, color="gray", linestyle="--")
+    ax.set_xlabel("$\\theta_b$", fontsize=18)
+    ax.set_ylabel("$\\theta_j$", fontsize=18)
+    ax.legend(handles=legend_elements, loc=4)
+    plt.show()
