@@ -11,7 +11,7 @@ def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, 
     if plot_3d:
         theta_star_mat_no_nan = np.nan_to_num(theta_star_mat)
         tsm_interp = interp.interp2d(h_over_w_mat, q_over_w_mat, theta_star_mat_no_nan, kind='linear', copy=False)
-        points_fact = 10
+        points_fact = 1
         how_new = np.linspace(np.min(h_over_w_mat), np.max(h_over_w_mat), h_over_w_mat.shape[0] * points_fact)
         qow_new = np.linspace(np.min(q_over_w_mat), np.max(q_over_w_mat), q_over_w_mat.shape[0] * points_fact)
         how_new_mat, qow_new_mat = np.meshgrid(how_new, qow_new)
