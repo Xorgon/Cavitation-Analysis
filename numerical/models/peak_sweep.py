@@ -18,7 +18,7 @@ last_h = None
 last_q = None
 
 n = 20000
-w_thresh = 6
+w_thresh = 12
 density_ratio = 0.25
 
 all_h_over_ws = []
