@@ -33,22 +33,22 @@ def findPeaks(x, y, n=2, kernel=5):
     Standard peak finding algorithm, finds the first n peaks using a kernel
     of size kernel.
     """
-    xPeak = []  # x-position of the peak
+    peakIdx = []  # index of the peak
     yPeak = []  # peak value
     k = np.int((kernel - 1) / 2)
     for i in range(len(x) - (kernel - 1)):
         if np.max(y[i:i + kernel]) == y[i + k]:
             # If this is the first peak that is found, then the peak is added
-            if len(xPeak) < 1:
-                xPeak.append(i + k)
+            if len(peakIdx) < 1:
+                peakIdx.append(i + k)
                 yPeak.append(y[i + k])
             # Check if this is not a peak within the same range
-            elif (i + k - xPeak[-1]) > k:
-                xPeak.append(i + k)
+            elif (i + k - peakIdx[-1]) > k:
+                peakIdx.append(i + k)
                 yPeak.append(y[i + k])
-            if len(xPeak) == n:
+            if len(peakIdx) == n:
                 break
-    return xPeak, yPeak
+    return peakIdx, yPeak
 
 
 def makeBinary(I):
