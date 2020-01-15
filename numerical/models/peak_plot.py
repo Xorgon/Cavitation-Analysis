@@ -50,6 +50,8 @@ def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, 
     fig, axes = plt.subplots(1, 2, figsize=(5.31445, 3.5))
     plt.sca(axes[0])
     cnt = plt.contourf(h_over_w_mat, q_over_w_mat, theta_star_mat, levels=16)
+    plt.xticks(range(1, 5 + 1))
+    plt.yticks(range(1, 5 + 1))
     for c in cnt.collections:
         c.set_edgecolor("face")  # Reduce aliasing in output.
     plt.xlabel("$h / w$")
@@ -59,6 +61,8 @@ def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, 
 
     plt.sca(axes[1])
     cnt = plt.contourf(h_over_w_mat, q_over_w_mat, p_bar_star_mat, levels=16)
+    plt.xticks(range(1, 5 + 1))
+    plt.yticks(range(1, 5 + 1))
     for c in cnt.collections:
         c.set_edgecolor("face")  # Reduce aliasing in output.
     plt.xlabel("$h / w$")
