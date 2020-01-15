@@ -21,11 +21,6 @@ n = 20000
 w_thresh = 12
 density_ratio = 0.25
 
-all_h_over_ws = []
-all_q_over_ws = []
-theta_stars = []
-p_bar_stars = []
-
 save_file = open(f"model_outputs/peak_sweep_{n}_{n_points}x{n_points}.csv", 'a')
 
 for h in hs:
@@ -45,11 +40,12 @@ for h in hs:
         _, p, theta_j, _ = find_slot_peak(w, q, h, actual_n,
                                           varied_slot_density_ratio=density_ratio, density_w_thresh=w_thresh,
                                           centroids=centroids, normals=normals, areas=areas, R_inv=R_inv)
-        all_h_over_ws.append(h / w)
-        all_q_over_ws.append(q / w)
-        theta_stars.append(theta_j)
-        p_bar_stars.append(2 * p / w)
-        save_file.write(f"{h / w},{q / w},{theta_j},{2 * p / w}\n")
+
+        center_p_bar = 0.05
+        near_center_vel, _ = bem.get_jet_dir_and_sigma([center_p_bar, q, 0], centroids, normals, areas, R_inv=R_inv)
+        center_grad = np.arctan2(near_center_vel[1], near_center_vel[0]) + np.pi / 2
+
+        save_file.write(f"{h / w},{q / w},{theta_j},{2 * p / w},{center_grad / center_p_bar}\n")
 
         # Make sure the data is saved to disk every time.
         save_file.flush()
