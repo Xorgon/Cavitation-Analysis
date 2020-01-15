@@ -14,7 +14,7 @@ config = {
     "use_all_dirs": False,
     "normalize": False,
     "plot_fits": False,
-    "skip_bad_data": True,
+    "skip_bad_data": False,
     "plot_means": False,
     "labelled": False,
     "label_tags": False,
@@ -40,7 +40,14 @@ ax_width = (fig_width - left_padding - right_padding - (num_cols - 1) * h_spacin
 fig_height = ax_width * num_rows + bottom_padding + top_padding + (num_rows - 1) * v_spacing
 
 fig, axes = plt.subplots(num_rows, num_cols, sharex='none', sharey="all", figsize=(fig_width, fig_height))
-labels = "abcdefghijk"
+# labels = "abcdefghijk"
+labels = ["w1h3",
+          "w2h3a",
+          "w2h3b",
+          "w2h6",
+          "w2h9",
+          "w2h12",
+          "w4h12"]
 for j, i in itertools.product(range(num_rows), range(num_cols)):
     if 3 * j + i >= num_plots:
         axes[j, i].set_visible(False)
@@ -50,16 +57,17 @@ for j, i in itertools.product(range(num_rows), range(num_cols)):
                      use_defaults=False, config=config, num_series=1)
         axes[j, i].xaxis.label.set_size(10)
         axes[j, i].yaxis.label.set_size(10)
-        text_pos = ((left_padding + i * (h_spacing + ax_width) + 0.075) / fig_width,
-                    (bottom_padding + (num_rows - j) * (ax_width + v_spacing) - 0.1 - v_spacing) / fig_height)
-        axes[j, i].annotate("$" + f"{labels[i + num_cols * j]}" + ")$", xy=(0, 0), xytext=text_pos,
-                            textcoords='figure fraction',
+        # text_pos = ((left_padding + i * (h_spacing + ax_width) + 0.075) / fig_width,
+        #             (bottom_padding + (num_rows - j) * (ax_width + v_spacing) - 0.1 - v_spacing) / fig_height)
+        axes[j, i].annotate(f"{labels[i + num_cols * j]}", xy=(0, 0), xytext=(0.05, 0.95),
+                            textcoords='axes fraction',
                             horizontalalignment='left', verticalalignment='top')
 
-plt.subplots_adjust(left=left_padding / fig_width,
-                    right=(fig_width - right_padding) / fig_width,
-                    top=(fig_height - top_padding) / fig_height,
-                    bottom=bottom_padding / fig_height,
-                    wspace=h_spacing / ax_width,
-                    hspace=v_spacing / ax_width)
+# plt.subplots_adjust(left=left_padding / fig_width,
+#                     right=(fig_width - right_padding) / fig_width,
+#                     top=(fig_height - top_padding) / fig_height,
+#                     bottom=bottom_padding / fig_height,
+#                     wspace=h_spacing / ax_width,
+#                     hspace=v_spacing / ax_width)
+plt.tight_layout()
 plt.show()
