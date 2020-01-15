@@ -23,7 +23,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         "use_all_dirs": True,
         "normalize": True,
         "plot_fits": False,
-        "skip_bad_data": True,
+        "skip_bad_data": False,
         "plot_means": False,
         "labelled": True,
         "label_tags": False,
@@ -67,9 +67,24 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     #                     'w2h3y5.5_bem_slot_prediction_15000',
     #                     'w2h3y5.5_bem_slot_prediction_10000']
     prediction_file_dir = "../../numerical/models/model_outputs/slot/"
-    # prediction_files = ['w2.20h2.70q3.84_bem_slot_prediction_20000']
-    prediction_files = ['w4.20h11.47q2.43_bem_slot_prediction_20000']
-    # prediction_files = []
+    # prediction_files = ['w2.20h2.70q3.84_bem_slot_prediction_20000',
+    #                     'w2.20h2.70q2.29_bem_slot_prediction_20000',
+    #                     'w2.20h2.90q3.68_bem_slot_prediction_20000',
+    #                     'w4.20h11.47q2.43_bem_slot_prediction_20000']
+    # prediction_files = [
+    #     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_2',
+    #     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_3',
+    #     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_4',
+    #     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_6',
+    #     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_9',
+    # ]
+    # prediction_files = ['w2.20h2.90q3.68_bem_slot_prediction_20000_0.25_6',
+    #                     'w2.20h2.90q3.68_bem_slot_prediction_20000_0.25_6a']
+    # prediction_files = ['w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_6a']
+    # prediction_files = ['w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_3a',
+    #                     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_6a',
+    #                     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_9a']
+    prediction_files = ['w3.00h3.00q3.00_bem_slot_prediction_20000_0.25_6']
 
     dirs = []
     if use_all_dirs:
@@ -77,6 +92,8 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
             root_dir = "../../../Data/SlotSweeps"
         else:
             root_dir = file.select_dir(create_window=create_window)
+            if root_dir == "/":
+                exit()
         for root, _, files in os.walk(root_dir):
             if "params.py" in files:
                 dirs.append(root + "/")
@@ -151,6 +168,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     if len(markers) < len(res_dict.keys()):
         raise ValueError("Too few markers are available for the data sets.")
     for label in res_dict.keys():
+        is_bad_data = False
         # Use a second order polynomial to approximate both peaks.
         m_x_set = set(res_dict[label][4])  # Set of measurement x values
         mean_xs = []
@@ -189,9 +207,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
 
         if max_poly_coeffs[0] > 0 or min_poly_coeffs[0] < 0:
             print(f"WARNING: Incorrect curve fit on {label}.")
-            if skip_bad_data:
-                num_rejected_sets += 1
-                continue
+            is_bad_data = True
 
         theta_j_max = (max_fitted_peak - min_fitted_peak) / 2
         theta_j_offset = (max_fitted_peak + min_fitted_peak) / 2
@@ -200,13 +216,12 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
 
         if abs(theta_j_offset) > 0.05:  # Any larger than this would mean very noticeable tilt of the frame.
             print(f"WARNING: Large jet angle offset detected on {label}.")
-            if skip_bad_data:
-                num_rejected_sets += 1
-                continue
+            is_bad_data = True
 
+        q = np.mean(res_dict[label][2])
         if verbose:
             print(f"{label}\n"
-                  f"    q = {np.mean(res_dict[label][2]):.4f}\n"
+                  f"    q = {q :.4f}\n"
                   f"    Max peak = {max_fitted_peak:.4f} (at p_bar={max_fitted_peak_p:.4f})\n"
                   f"    Min peak = {min_fitted_peak:.4f} (at p_bar={min_fitted_peak_p:.4f})\n"
                   f"    Average peak = {theta_j_max:.4f} (at p_bar={p_bar_theta_j_max:.4f})\n"
@@ -266,9 +281,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
 
         if r2_min_to_max < 0.5 and r2_max_to_min < 0.5 and r2_cross < 0.5:  # Essentially arbitrary values
             print(f"WARNING: Poor correlation between fits {label}.")
-            if skip_bad_data:
-                num_rejected_sets += 1
-                continue
+            is_bad_data = True
 
         if normalize:
             res_dict[label][1] = np.divide(res_dict[label][1], theta_j_max)
@@ -284,6 +297,10 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
 
         mean_xs, means = zip(*sorted(zip(mean_xs, means), key=lambda k: k[0]))
 
+        if skip_bad_data and is_bad_data:
+            num_rejected_sets += 1
+            continue
+
         # Plot the data
         if plot_fits:
             ax.plot(max_fit_xs, max_fit_ys, color="r")
@@ -293,8 +310,9 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         marker = markers.pop(0)
         if labelled:
             c = None
+            zorder = q
             if len(res_dict.keys()) > 1 or colours:
-                legend_label = f"q = {np.mean(res_dict[label][2]):.2f}"
+                legend_label = f"q = {q :.2f}"
             else:
                 legend_label = "Experimental"
                 c = "k"
@@ -302,20 +320,28 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
                 legend_label = "{0}, ".format(label.split(":")[0]) + legend_label
             if not colours:
                 c = 'k'
+            if is_bad_data:
+                c = 'lightgray'
+                zorder = -1
             if error_bars:
-                ax.errorbar(mean_xs, means, yerr=y_errs, capsize=3, fmt=marker, label=legend_label, color=c)
+                ax.errorbar(mean_xs, means, yerr=y_errs, capsize=3, fmt=marker, label=legend_label, color=c,
+                            zorder=zorder)
             else:
-                ax.scatter(res_dict[label][0], res_dict[label][1], c, marker=marker, label=legend_label)
+                ax.scatter(res_dict[label][0], res_dict[label][1], c, marker=marker, label=legend_label, zorder=zorder)
         else:
             c = None if colours else 'k'
+            zorder = q
+            if is_bad_data:
+                c = 'lightgray'
+                zorder = -1
             if error_bars:
-                ax.errorbar(mean_xs, means, yerr=y_errs, capsize=3, fmt=marker, color=c)
+                ax.errorbar(mean_xs, means, yerr=y_errs, capsize=3, fmt=marker, color=c, zorder=zorder)
                 if verbose:
-                    print(f"{label}, Mean q = {np.mean(res_dict[label][2])}\n")
+                    print(f"{label}, Mean q = {q}\n")
             else:
-                ax.scatter(res_dict[label][0], res_dict[label][1], marker=marker, color=c)
+                ax.scatter(res_dict[label][0], res_dict[label][1], marker=marker, color=c, zorder=zorder)
                 if verbose:
-                    print(f"{label}, Mean q = {np.mean(res_dict[label][2])}\n")
+                    print(f"{label}, Mean q = {q}\n")
 
     print(f"Number of rejected data sets = {num_rejected_sets}")
     if plot_predicted:
@@ -367,7 +393,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
 
 
 if __name__ == "__main__":
-    font_size = 18
+    font_size = 10
     plt_util.initialize_plt(font_size=font_size)
 
     fig_width = 5.31445
