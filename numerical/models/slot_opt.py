@@ -38,7 +38,7 @@ def find_slot_peak(w, q, h, n=10000, length=50, depth=50, varied_slot_density_ra
         print(f"Peak not found in interval, returning NaN. w={w}  q={q}  h={h}  n={n}")
         return np.nan, np.nan, np.nan, np.nan
     if res.success:
-        print(f"Optimization finished with {res.nfev} evaluations, w={w}  q={q}  h={h}  n={n}, "
+        print(f"Optimization finished with {res.nfev} evaluations, w={w:.2f}  q={q:.2f}  h={h:.2f}  n={n}, "
               f"theta_star={-res.fun:.3f} p_bar_star={-res.x:.3f}")
         return n, -res.x, -res.fun, mid_grad  # Take the right peak rather than the left peak that was found.
     else:
