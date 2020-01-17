@@ -119,6 +119,22 @@ def plot_peak_sweep(h_over_w_mat, q_over_w_mat, theta_star_mat, p_bar_star_mat, 
         plt.ylabel('$\\theta_j^\\star$')
         plt.colorbar(label="$q / w$")
 
+        plt.figure()
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.scatter(q_over_w_mat, p_bar_star_mat, c=h_over_w_mat)
+        plt.xlabel('$q / w$')
+        plt.ylabel('$\\bar{p}^\\star$')
+        plt.colorbar(label="$h / w$")
+
+        plt.figure()
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.scatter(h_over_w_mat, p_bar_star_mat, c=q_over_w_mat)
+        plt.xlabel('$h / w$')
+        plt.ylabel('$\\bar{p}^\\star$')
+        plt.colorbar(label="$q / w$")
+
     plt.show()
 
 
