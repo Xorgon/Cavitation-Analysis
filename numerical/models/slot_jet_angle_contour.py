@@ -1,63 +1,67 @@
-import numpy as np
-import math
-from scipy.optimize import curve_fit
-import numerical.util.gen_utils as gen
-import numerical.bem as bem
 import matplotlib.pyplot as plt
-import itertools
-from common.util.plotting_utils import plot_3d_point_sets
-import os
-import common.util.file_utils as file
-import scipy.sparse
+import numpy as np
 
-offset = 1
+n = 20000
 w = 2
-h = 3
-N = 32
-# qs = np.concatenate([np.linspace(offset, 3, np.round(3 * N / 4)), np.linspace(3 + 0.1, w * 5, np.ceil(N / 4))])
-# ps = np.concatenate([np.linspace(-5 * w / 2, -w, np.ceil(N / 8)),
-#                      np.linspace(-w + 0.1, w - 0.1, np.round(3 * N / 4)),
-#                      np.linspace(w, 5 * w / 2, np.ceil(N / 8))])
+h = 4
+density_ratio = 0.15
+w_thresh = 15
+length = 100
 
-qs = np.linspace(3 * w, 5 * w, 16)
-ps = np.linspace(0, 5 * w / 2, 16)
+N = 64
 
-m_0 = 1
-n = 10000
-density_ratio = 0.25
-w_thresh = 12
-
-# centroids, normals, areas = gen.gen_slot(n=n, h=h, w=w, length=50, depth=50)
-centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50, w_thresh=w_thresh,
-                                                density_ratio=density_ratio)
-print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
-# plot_3d_point_sets([centroids])
-R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
-R_inv = scipy.linalg.inv(R_matrix)
-
-speeds = []
+ps = []
+qs = []
 us = []
 vs = []
+speeds = []
 
-for q, p in itertools.product(qs, ps):
-    print(f"Testing p={p:5.3f}, q={q:5.3f}")
-    R_b = bem.get_R_vector([p, q, 0], centroids, normals)
-    res_vel, sigma = bem.get_jet_dir_and_sigma([p, q, 0], centroids, normals, areas, m_0=m_0, R_inv=R_inv, R_b=R_b)
-    speed = np.linalg.norm(res_vel)
-    speeds.append(speed)
-    us.append(res_vel[0] / speed)
-    vs.append(res_vel[1] / speed)
+file = open(f"model_outputs/slot_vel_data/vel_sweep_n{n}_w{w:.2f}_h{h:.2f}"
+            f"_drat{density_ratio}_wthresh{w_thresh}_len{length}_N{N}.csv", 'r')
 
-P, Q = np.meshgrid(ps, qs)
-S = np.reshape(np.array(speeds), P.shape)
-U = np.reshape(np.array(us), P.shape)
-V = np.reshape(np.array(vs), P.shape)
+for line in file.readlines():
+    p, q, u, v = line.split(',')
+    ps.append(float(p))
+    qs.append(float(q))
+    us.append(float(u))
+    vs.append(float(v))
+    speeds.append(np.linalg.norm([float(u), float(v)]))
+
+if len(ps) == N ** 2:
+    P = np.reshape(np.array(ps), (N, N))
+    Q = np.reshape(np.array(qs), (N, N))
+    S = np.reshape(np.array(speeds), (N, N))
+    U = np.reshape(np.array(us), P.shape)
+    V = np.reshape(np.array(vs), P.shape)
+else:
+    P = np.empty((N, N))
+    P.fill(np.nan)
+    Q = np.empty((N, N))
+    Q.fill(np.nan)
+    U = np.empty((N, N))
+    U.fill(np.nan)
+    V = np.empty((N, N))
+    V.fill(np.nan)
+    S = np.empty((N, N))
+    S.fill(np.nan)
+    for k in range(len(ps)):
+        i = int(np.floor(k / N))
+        j = int(k % N)
+        P[i, j] = ps[k]
+        Q[i, j] = qs[k]
+        U[i, j] = us[k]
+        V[i, j] = vs[k]
+        S[i, j] = speeds[k]
 
 fig = plt.figure()
 fig.gca().set_aspect('equal', 'box')
-cnt = plt.contourf(2 * P / w, Q / w, np.arctan2(V, U) + np.pi / 2, levels=128)
+min_q_idx = 0
+cnt = plt.contourf((2 * P / w)[min_q_idx:, :], (Q / w)[min_q_idx:, :],
+                   (np.abs(np.arctan2(V, U) + np.pi / 2))[min_q_idx:, :], levels=128)
 plt.xlabel("$\\bar{p}$")
 plt.ylabel("$q / w$")
-plt.colorbar(label="$\\theta_j$")
+plt.colorbar(label="$|\\theta_j|$")
+plt.xlim((min(ps), max(ps)))
+plt.ylim(-h - 0.1, max(qs))
 plt.plot([min(ps), -w / 2, -w / 2, w / 2, w / 2, max(ps)], [0, 0, -h, -h, 0, 0], 'k')
 plt.show()
