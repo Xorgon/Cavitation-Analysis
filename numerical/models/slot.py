@@ -23,8 +23,8 @@ n = 5000
 density_ratio = 0.25
 w_thresh = 6
 
-if not os.path.exists("model_outputs/slot".format(n)) and save_to_file:
-    os.makedirs("model_outputs/slot".format(n))
+if not os.path.exists("model_outputs/slot") and save_to_file:
+    os.makedirs("model_outputs/slot")
 
 # centroids, normals, areas = gen.gen_slot(n=n, h=h, w=w, length=50, depth=50)
 centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50, w_thresh=w_thresh,
