@@ -11,7 +11,7 @@ from scipy import stats
 from sklearn.metrics import r2_score
 
 import experimental.util.analysis_utils as au
-import experimental.util.file_utils as file
+import common.util.file_utils as file
 import experimental.util.config_utils as cu
 import common.util.plotting_utils as plt_util
 
@@ -62,36 +62,21 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     confidence_interval = 0.99  # Set the confidence interval for the error bars.
     std = 0.015085955056793596  # Set the standard deviation for the error bars (from error_statistics.py).
 
-    # prediction_files = ['bem_slot_prediction_20000']
-    # prediction_files = ['w2h3y5.5_bem_slot_prediction_20000',
-    #                     'w2h3y5.5_bem_slot_prediction_15000',
-    #                     'w2h3y5.5_bem_slot_prediction_10000']
     prediction_file_dir = "../../numerical/models/model_outputs/slot/"
-    # prediction_files = ['w2.20h2.70q3.84_bem_slot_prediction_20000',
-    #                     'w2.20h2.70q2.29_bem_slot_prediction_20000',
-    #                     'w2.20h2.90q3.68_bem_slot_prediction_20000',
-    #                     'w4.20h11.47q2.43_bem_slot_prediction_20000']
-    # prediction_files = [
-    #     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_2',
-    #     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_3',
-    #     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_4',
-    #     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_6',
-    #     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_9',
-    # ]
-    # prediction_files = ['w2.20h2.90q3.68_bem_slot_prediction_20000_0.25_6',
-    #                     'w2.20h2.90q3.68_bem_slot_prediction_20000_0.25_6a']
-    # prediction_files = ['w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_6a']
-    # prediction_files = ['w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_3a',
-    #                     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_6a',
-    #                     'w4.20h11.47q3.43_bem_slot_prediction_20000_0.25_9a']
-    prediction_files = ['w3.00h3.00q3.00_bem_slot_prediction_20000_0.25_6']
+    prediction_files = []
+    if plot_predicted:
+        num_predictions = int(input("Number of prediction files to load = "))
+        for i in range(num_predictions):
+            fpath = file.select_file(prediction_file_dir, create_window=create_window)
+            print(fpath)
+            prediction_files.append(fpath)
 
     dirs = []
     if use_all_dirs:
         if use_defaults:
             root_dir = "../../../Data/SlotSweeps"
         else:
-            root_dir = file.select_dir(create_window=create_window)
+            root_dir = file.select_dir("../../../../Data/SlotSweeps", create_window=create_window)
             if root_dir == "/":
                 exit()
         for root, _, files in os.walk(root_dir):
@@ -103,7 +88,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         if num_series is None:
             num_series = int(input("Number of data sets to load = "))
         for i in range(num_series):
-            dirs.append(file.select_dir(create_window=create_window))
+            dirs.append(file.select_dir("../../../../Data/SlotSweeps", create_window=create_window))
 
     res_dict = {}
     for dir_path in dirs:
@@ -350,7 +335,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         for i, f_name in enumerate(prediction_files):
             predicted_xs = []
             predicted_theta_js = []
-            f = open(f"{prediction_file_dir}{f_name}.csv")
+            f = open(f"{f_name}")
             for line in f.readlines():
                 split = line.strip().split(",")
                 predicted_xs.append(float(split[0]))
