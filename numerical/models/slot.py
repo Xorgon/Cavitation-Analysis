@@ -10,18 +10,20 @@ import common.util.file_utils as file
 import scipy.sparse
 
 # ps = [8]
-w = 2
-h = 4
-q = 10
-ps = np.linspace(-6 * w / 2, 6 * w / 2, 100)
+w = 1.26
+h = 3.00
+q = 1.89
 
-save_to_file = False
-calculate_error = False
+p_bar_lim = 12
+ps = np.linspace(-p_bar_lim * w / 2, p_bar_lim * w / 2, 100)
+
+save_to_file = True
+calculate_error = True
 
 m_0 = 1
-n = 5000
+n = 20000
 density_ratio = 0.25
-w_thresh = 6
+w_thresh = p_bar_lim
 
 if not os.path.exists("model_outputs/slot") and save_to_file:
     os.makedirs("model_outputs/slot")
