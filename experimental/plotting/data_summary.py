@@ -16,6 +16,7 @@ print(f"Found {len(dirs)} data sets")
 h_over_ws = []
 q_over_ws = []
 cs = []
+pnt_labels = []
 
 q_dict = {}
 colors = ["c", "b", "y", "r", "g", "m", "orange", "purple"]
@@ -55,13 +56,17 @@ for i, dir_path in enumerate(dirs):
 
         if label in q_dict:
             mean_q = np.mean(q_dict[label])
+            pnt_label = f"{label.split(':')[0]}"
             h_over_ws.append(params.slot_height / params.slot_width)
             q_over_ws.append(mean_q / params.slot_width)
+            pnt_labels.append(pnt_label)
             cs.append(colors[i])
 
 initialize_plt(font_size=14, line_scale=2)
 plt.figure()
 plt.scatter(h_over_ws, q_over_ws, c=cs, marker="s")
+for p, how, qow in zip(pnt_labels, h_over_ws, q_over_ws):
+    plt.annotate(p, (how, qow))
 plt.xlabel("$h / w$")
 plt.ylabel("$q / w$")
 plt.tight_layout()
