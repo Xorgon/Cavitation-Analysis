@@ -41,15 +41,11 @@ fig_height = ax_width * num_rows + bottom_padding + top_padding + (num_rows - 1)
 
 fig, axes = plt.subplots(num_rows, num_cols, sharex='none', sharey="all", figsize=(fig_width, fig_height))
 # labels = "abcdefghijk"
-labels = ["w1h3",
-          "w2h3a",
-          "w2h3b",
-          "w2h6",
-          "w2h9",
-          "w2h12",
-          "w4h12"]
+# labels = ["w1h3, q=1.94", "w2h3a, q=2.29", "w2h6, q=1.52", "w4h12, q=3.43"]
+labels = ["w1h3", "w2h3a", "w2h3b", "w2h6", "w2h9", "w2h12", "w4h12"]
+
 for j, i in itertools.product(range(num_rows), range(num_cols)):
-    if 3 * j + i >= num_plots:
+    if num_cols * j + i >= num_plots:
         axes[j, i].set_visible(False)
     else:
         axes[j, i].tick_params(axis='both', which='major', labelsize=10)
