@@ -13,7 +13,7 @@ if not os.path.exists("model_outputs/slot_vel_data"):
 
 offset = 0.05
 w = 2
-h = 4
+h = 2
 N = 64
 qs = np.concatenate([np.linspace(offset, 3, np.round(3 * N / 4)), np.linspace(3 + 0.1, w * 5, np.ceil(N / 4))])
 ps = np.concatenate([np.linspace(-7 * w / 2, -w, np.ceil(N / 8)),
@@ -25,16 +25,32 @@ ps = np.concatenate([np.linspace(-7 * w / 2, -w, np.ceil(N / 8)),
 
 m_0 = 1
 n = 20000
-density_ratio = 0.15
-w_thresh = 15
+density_ratio = 0.1
+w_thresh = 12
 length = 100
 
 # centroids, normals, areas = gen.gen_slot(n=n, h=h, w=w, length=50, depth=50)
 centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=length, depth=50, w_thresh=w_thresh,
                                                 density_ratio=density_ratio)
 
-file = open(f"model_outputs/slot_vel_data/vel_sweep_n{n}_w{w:.2f}_h{h:.2f}"
-            f"_drat{density_ratio}_wthresh{w_thresh}_len{length}_N{N}.csv", 'w')
+centroids_file = open(f"model_outputs/slot_vel_data/centroids_n{n}_w{w:.2f}_h{h:.2f}"
+                      f"_drat{density_ratio}_wthresh{w_thresh}_len{length}.csv", 'w')
+for c in centroids:
+    centroids_file.write(f"{c[0]},{c[1]},{c[2]}\n")
+centroids_file.close()
+
+normals_file = open(f"model_outputs/slot_vel_data/normals_n{n}_w{w:.2f}_h{h:.2f}"
+                    f"_drat{density_ratio}_wthresh{w_thresh}_len{length}.csv", 'w')
+for normal in normals:
+    normals_file.write(f"{normal[0]},{normal[1]},{normal[2]}\n")
+normals_file.close()
+
+output_path = f"model_outputs/slot_vel_data/vel_sweep_n{n}_w{w:.2f}_h{h:.2f}" \
+              f"_drat{density_ratio}_wthresh{w_thresh}_len{length}_N{N}.csv"
+if os.path.exists(output_path):
+    print("Output path already exists!")
+    exit()
+file = open(output_path, 'w')
 print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
 # plot_3d_point_sets([centroids])
 R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
@@ -53,6 +69,8 @@ for q, p in itertools.product(qs, ps):
     us.append(res_vel[0] / speed)
     vs.append(res_vel[1] / speed)
     file.write(f"{p},{q},{res_vel[0]},{res_vel[1]}\n")
+    file.flush()
+    os.fsync(file.fileno())
 
 file.close()
 
