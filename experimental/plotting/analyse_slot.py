@@ -22,15 +22,19 @@ class SweepData:
     """
     geometry_label = None  # Geometry label.
     y = None  # Measured y value for all sweep points.
+    w = None  # Slot width
+    h = None  # Slot height
     xs = None  # Measured x values.
     p_bars = None  # Calculated p_bar values.
     theta_js = None  # Calculated theta_j values.
     is_shifted = False  # Whether the data has been shifted to correct for offset
     qs = None  # Calculated q values.
 
-    def __init__(self, geometry_label, y):
+    def __init__(self, geometry_label, y, w, h):
         self.geometry_label = geometry_label
         self.y = y
+        self.w = w
+        self.h = h
         self.xs = []
         self.p_bars = []
         self.theta_js = []
@@ -69,7 +73,7 @@ class SweepData:
             mean_theta_js.append(np.mean(theta_js))
         return xs_set, mean_p_bars, mean_theta_js
 
-    def get_curve_fits(self, p_bar_range=1):
+    def get_curve_fits(self, p_bar_range=None):
         """
         Computes and returns curve fits for the two peaks of a sweep. Returns two tuples, one each for the maximum and
         minimum peaks. Each tuple contains the position of the peak, value at the peak, and curve fit polynomial
@@ -83,6 +87,9 @@ class SweepData:
                                                            key=lambda k: k[1]))  # Sorted by theta_j
         max_peak_p_bar = srtd_mean_p_bars[-1]
         min_peak_p_bar = srtd_mean_p_bars[0]
+
+        if p_bar_range is None:
+            p_bar_range = 0.5 * (max_peak_p_bar - min_peak_p_bar) / 2
 
         max_poly_coeffs = np.polyfit([x for x in self.p_bars if 0 < x < max_peak_p_bar + p_bar_range],
                                      [theta_j for x, theta_j in zip(self.p_bars, self.theta_js) if
@@ -341,7 +348,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
             else:
                 label = f"{dir_path}"
 
-            sweep_data = SweepData(label, reading_y)
+            sweep_data = SweepData(label, reading_y, params.slot_width, params.slot_height)
             sweep_readings = [reading for reading in readings if reading.m_y == reading_y]
             # Post-process data to get jet angles.
             for reading in sweep_readings:
@@ -372,7 +379,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         max_peak_x = sorted_mean_xs[-1][0]
         min_peak_x = sorted_mean_xs[0][0]
 
-        p_bar_range = 0.5 * max_peak_x  # The range of x over which the peak is fitted
+        p_bar_range = 0.5 * (max_peak_x - min_peak_x) / 2  # The range of x over which the peak is fitted
 
         (max_fitted_peak_p, max_fitted_peak, max_poly_coeffs), (min_fitted_peak_p, min_fitted_peak, min_poly_coeffs) \
             = sweep.get_curve_fits(p_bar_range)
