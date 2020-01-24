@@ -25,6 +25,7 @@ class SweepData:
     xs = None  # Measured x values.
     p_bars = None  # Calculated p_bar values.
     theta_js = None  # Calculated theta_j values.
+    is_shifted = False  # Whether the data has been shifted to correct for offset
     qs = None  # Calculated q values.
 
     def __init__(self, geometry_label, y):
@@ -68,7 +69,7 @@ class SweepData:
             mean_theta_js.append(np.mean(theta_js))
         return xs_set, mean_p_bars, mean_theta_js
 
-    def get_peaks(self, p_bar_range=1):
+    def get_curve_fits(self, p_bar_range=1):
         """
         Computes and returns curve fits for the two peaks of a sweep. Returns two tuples, one each for the maximum and
         minimum peaks. Each tuple contains the position of the peak, value at the peak, and curve fit polynomial
@@ -77,12 +78,7 @@ class SweepData:
         :returns: (max_peak_p_bar, max_peak_theta_j, max_poly_coeffs),
                  (min_peak_p_bar, min_peak_theta_j, max_poly_coeffs)
         """
-        _, p_bar_groups, theta_j_groups = self.get_grouped_data()
-        mean_p_bars = []
-        mean_theta_js = []
-        for p_bars, theta_js in zip(p_bar_groups, theta_j_groups):
-            mean_p_bars.append(np.mean(p_bars))
-            mean_theta_js.append(np.mean(theta_js))
+        _, mean_p_bars, mean_theta_js = self.get_mean_data()
         srtd_mean_p_bars, srtd_mean_theta_js = zip(*sorted(zip(mean_p_bars, mean_theta_js),
                                                            key=lambda k: k[1]))  # Sorted by theta_j
         max_peak_p_bar = srtd_mean_p_bars[-1]
@@ -103,6 +99,103 @@ class SweepData:
         return (max_peak_p_bar, max_peak_theta_j, max_poly_coeffs), \
                (min_peak_p_bar, min_peak_theta_j, min_poly_coeffs)
 
+    def check_curve_fits(self, max_peak_p_bar, max_peak_theta_j, max_poly_coeffs,
+                         min_peak_p_bar, min_peak_theta_j, min_poly_coeffs,
+                         p_bar_range, verbose=False):
+        """
+        Shifts the data contained in SweepData based on the curve fit peaks supplied.
+        :param max_peak_p_bar: p_bar position of maximum peak.
+        :param max_peak_theta_j: theta_j value at maximum peak.
+        :param max_poly_coeffs: polynomial coefficients for the maximum peak fit.
+        :param min_peak_p_bar: p_bar position of minimum peak.
+        :param min_peak_theta_j: theta_j value at miminum peak.
+        :param min_poly_coeffs: polynomial coefficients for the minimum peak fit.
+        :param p_bar_range: p_bar range to include beyond the highest mean peak position.
+        :param verbose: debug outputs.
+        :return:
+        """
+        theta_j_offset = (max_peak_theta_j + min_peak_theta_j) / 2
+        p_bar_theta_j_max = (max_peak_p_bar - min_peak_p_bar) / 2
+        p_bar_offset = (max_peak_p_bar + min_peak_p_bar) / 2
+
+        if max_poly_coeffs[0] > 0 or min_poly_coeffs[0] < 0:
+            print(f"WARNING: Incorrect curve fit on {self.geometry_label}:{self.y}.")
+            return False
+
+        shifted_p_bar = self.p_bars if self.is_shifted else np.subtract(self.p_bars, p_bar_offset)
+        shifted_theta_j = self.theta_js if self.is_shifted else np.subtract(self.theta_js, theta_j_offset)
+
+        r2_max_to_max = r2_score([theta_j for x, theta_j in zip(shifted_p_bar, shifted_theta_j) if
+                                  0 < x < p_bar_theta_j_max + p_bar_range],
+                                 np.subtract(np.polyval(max_poly_coeffs,
+                                                        [x for x in shifted_p_bar if
+                                                         0 < x < p_bar_theta_j_max + p_bar_range]),
+                                             theta_j_offset),
+                                 multioutput='uniform_average')
+
+        r2_min_to_min = r2_score([theta_j for x, theta_j in zip(shifted_p_bar, shifted_theta_j) if
+                                  -p_bar_theta_j_max - p_bar_range < x < 0],
+                                 np.subtract(np.polyval(min_poly_coeffs,
+                                                        [x for x in shifted_p_bar if
+                                                         -p_bar_theta_j_max - p_bar_range < x < 0]),
+                                             theta_j_offset),
+                                 multioutput='uniform_average')
+
+        r2_min_to_max = r2_score([theta_j for x, theta_j in zip(shifted_p_bar, shifted_theta_j) if
+                                  0 < x < p_bar_theta_j_max + p_bar_range],
+                                 # Minimum curve fit reflected
+                                 -np.subtract(np.polyval(min_poly_coeffs,
+                                                         [-x for x in shifted_p_bar if
+                                                          0 < x < p_bar_theta_j_max + p_bar_range]),
+                                              theta_j_offset),
+                                 multioutput='uniform_average')
+        r2_max_to_min = r2_score([theta_j for x, theta_j in zip(shifted_p_bar, shifted_theta_j) if
+                                  -p_bar_theta_j_max - p_bar_range < x < 0],
+                                 # Maximum curve fit reflected
+                                 -np.subtract(np.polyval(max_poly_coeffs,
+                                                         [-x for x in shifted_p_bar if
+                                                          -p_bar_theta_j_max - p_bar_range < x < 0]),
+                                              theta_j_offset),
+                                 multioutput='uniform_average')
+
+        if verbose:
+            print(f"{self.geometry_label}: q={np.mean(self.qs)}")
+            print(f"    Maximum fit on maximum data, r2 = {r2_max_to_max:.3f}")
+            print(f"    Minimum fit on maximum data, r2 = {r2_min_to_max:.3f}")
+            print(f"    Minimum fit on minimum data, r2 = {r2_min_to_min:.3f}")
+            print(f"    Maximum fit on minimum data, r2 = {r2_max_to_min:.3f}")
+
+        low_values = np.mean([r2_max_to_max, r2_max_to_min, r2_min_to_min, r2_min_to_max]) < 0.25
+        badly_matched = r2_max_to_max / r2_min_to_max < 0.75 or r2_min_to_min / r2_max_to_min < 0.75
+        if low_values or badly_matched:
+            print(f"WARNING: Poor correlation between fits {self.geometry_label}:{self.y}, q={np.mean(self.qs):.2f}.")
+            return False
+
+        return True
+
+    def shift_data(self, max_peak_p_bar, max_peak_theta_j, min_peak_p_bar, min_peak_theta_j, keep_shifted=True):
+        """
+        Shifts the data contained in SweepData based on the curve fit peaks supplied.
+        :param max_peak_p_bar: p_bar position of maximum peak.
+        :param max_peak_theta_j: theta_j value at maximum peak.
+        :param min_peak_p_bar: p_bar position of minimum peak.
+        :param min_peak_theta_j: theta_j value at miminum peak.
+        :param keep_shifted: whether to keep the shifted data rather than the original data.
+        :return:
+        """
+        theta_j_max = (max_peak_theta_j - min_peak_theta_j) / 2
+        theta_j_offset = (max_peak_theta_j + min_peak_theta_j) / 2
+        p_bar_theta_j_max = (max_peak_p_bar - min_peak_p_bar) / 2
+        p_bar_offset = (max_peak_p_bar + min_peak_p_bar) / 2
+
+        # Correct the offset
+        if keep_shifted:
+            self.theta_js = np.subtract(self.theta_js, theta_j_offset)
+            self.p_bars = np.subtract(self.p_bars, p_bar_offset)
+            self.is_shifted = True
+
+        return p_bar_theta_j_max, p_bar_offset, theta_j_max, theta_j_offset
+
     def get_error_bars(self, confidence_interval, std):
         """ Computes error bar values for each group from :func:`SweepData.get_grouped_data`. """
         _, p_bar_groups, theta_j_groups = self.get_grouped_data()
@@ -113,6 +206,28 @@ class SweepData:
                                            scale=std / math.sqrt(len(p_bars)))
             errors.append(interval[1] - np.mean(theta_js))
         return errors
+
+
+def select_data_series(use_all_dirs=True, num_series=None, use_defaults=True, verbose=False, create_window=True):
+    dirs = []
+    if use_all_dirs:
+        if use_defaults:
+            root_dir = "../../../../Data/SlotSweeps"
+        else:
+            root_dir = file.select_dir("../../../../Data/SlotSweeps", create_window=create_window)
+            if root_dir == "/":
+                exit()
+        for root, _, files in os.walk(root_dir):
+            if "params.py" in files:
+                dirs.append(root + "/")
+        if verbose:
+            print(f"Found {len(dirs)} data sets")
+    else:
+        if num_series is None:
+            num_series = int(input("Number of data sets to load = "))
+        for i in range(num_series):
+            dirs.append(file.select_dir("../../../../Data/SlotSweeps", create_window=create_window))
+    return dirs
 
 
 def plot_prediction_files(prediction_files, ax, normalize=False, coloured_lines=True):
@@ -189,24 +304,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         for i in range(num_predictions):
             prediction_files.append(file.select_file(prediction_file_dir, create_window=create_window))
 
-    dirs = []
-    if use_all_dirs:
-        if use_defaults:
-            root_dir = "../../../../Data/SlotSweeps"
-        else:
-            root_dir = file.select_dir("../../../../Data/SlotSweeps", create_window=create_window)
-            if root_dir == "/":
-                exit()
-        for root, _, files in os.walk(root_dir):
-            if "params.py" in files:
-                dirs.append(root + "/")
-        if verbose:
-            print(f"Found {len(dirs)} data sets")
-    else:
-        if num_series is None:
-            num_series = int(input("Number of data sets to load = "))
-        for i in range(num_series):
-            dirs.append(file.select_dir("../../../../Data/SlotSweeps", create_window=create_window))
+    dirs = select_data_series(use_all_dirs, num_series, use_defaults, verbose, create_window)
 
     sweeps = []
     for dir_path in dirs:
@@ -274,22 +372,25 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         max_peak_x = sorted_mean_xs[-1][0]
         min_peak_x = sorted_mean_xs[0][0]
 
-        p_bar_range = 1  # The range of x over which the peak is fitted
+        p_bar_range = 0.5 * max_peak_x  # The range of x over which the peak is fitted
 
         (max_fitted_peak_p, max_fitted_peak, max_poly_coeffs), (min_fitted_peak_p, min_fitted_peak, min_poly_coeffs) \
-            = sweep.get_peaks(p_bar_range)
+            = sweep.get_curve_fits(p_bar_range)
 
-        if max_poly_coeffs[0] > 0 or min_poly_coeffs[0] < 0:
-            print(f"WARNING: Incorrect curve fit on {sweep.geometry_label}:{sweep.y}.")
-            is_bad_data = True
+        is_bad_data = not sweep.check_curve_fits(max_fitted_peak_p, max_fitted_peak, max_poly_coeffs,
+                                                 min_fitted_peak_p, min_fitted_peak, min_poly_coeffs,
+                                                 p_bar_range, verbose) or is_bad_data
 
-        theta_j_max = (max_fitted_peak - min_fitted_peak) / 2
-        theta_j_offset = (max_fitted_peak + min_fitted_peak) / 2
-        p_bar_theta_j_max = (max_fitted_peak_p - min_fitted_peak_p) / 2
-        p_bar_offset = (max_fitted_peak_p + min_fitted_peak_p) / 2
+        p_bar_theta_j_max, p_bar_offset, theta_j_max, theta_j_offset = sweep.shift_data(max_fitted_peak_p,
+                                                                                        max_fitted_peak,
+                                                                                        min_fitted_peak_p,
+                                                                                        min_fitted_peak,
+                                                                                        keep_shifted=do_shift)
+        m_x_set, mean_p_bars, means = sweep.get_mean_data()
 
         if abs(theta_j_offset) > 0.05:  # Any larger than this would mean very noticeable tilt of the frame.
-            print(f"WARNING: Large jet angle offset detected on {sweep.geometry_label}:{sweep.y}.")
+            print(f"WARNING: Large jet angle offset detected on {sweep.geometry_label}:{sweep.y}."
+                  f" q={np.mean(sweep.qs)}, theta_j_offset={theta_j_offset:.5f}")
             is_bad_data = True
 
         q = np.mean(sweep.qs)
@@ -300,18 +401,6 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
                   f"    Min peak = {min_fitted_peak:.4f} (at p_bar={min_fitted_peak_p:.4f})\n"
                   f"    Average peak = {theta_j_max:.4f} (at p_bar={p_bar_theta_j_max:.4f})\n"
                   f"    Offset = {theta_j_offset:.4f} (p_bar_offset={p_bar_offset:.4f})")
-
-        # Correct any offset
-        shifted_theta_j = np.subtract(sweep.theta_js, theta_j_offset)
-        shifted_p_bar = np.subtract(sweep.p_bars, p_bar_offset)
-        shifted_means = np.subtract(means, theta_j_offset)
-        shifted_mean_xs = np.subtract(mean_p_bars, p_bar_offset)
-
-        if do_shift:
-            sweep.theta_js = shifted_theta_j
-            sweep.p_bars = shifted_p_bar
-            means = shifted_means
-            mean_p_bars = shifted_mean_xs
 
         # Curve fit plot data
         max_fit_xs = np.linspace(0, max_peak_x + p_bar_range, 100)
@@ -329,33 +418,6 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         if do_shift:
             min_fit_xs = shifted_min_fit_xs
             min_fit_ys = shifted_min_fit_ys
-
-        r2_min_to_max = r2_score([theta_j for x, theta_j in zip(shifted_p_bar, shifted_theta_j) if
-                                  0 < x < max_peak_x + p_bar_range],
-                                 # Minimum curve fit reflected
-                                 -np.subtract(np.polyval(min_poly_coeffs,
-                                                         [-x for x in shifted_p_bar if
-                                                          0 < x < max_peak_x + p_bar_range]),
-                                              theta_j_offset),
-                                 multioutput='uniform_average')
-        r2_max_to_min = r2_score([theta_j for x, theta_j in zip(shifted_p_bar, shifted_theta_j) if
-                                  min_peak_x - p_bar_range < x < 0],
-                                 # Maximum curve fit reflected
-                                 -np.subtract(np.polyval(max_poly_coeffs,
-                                                         [-x for x in shifted_p_bar if
-                                                          min_peak_x - p_bar_range < x < 0]),
-                                              theta_j_offset),
-                                 multioutput='uniform_average')
-        r2_cross = r2_score(np.flip(-shifted_min_fit_ys), shifted_max_fit_ys)
-
-        if verbose:
-            print(f"    Minimum fit on maximum data, r2 = {r2_min_to_max}")
-            print(f"    Maximum fit on minimum data, r2 = {r2_max_to_min}")
-            print(f"    Correlation between fits, r2 = {r2_cross}")
-
-        if r2_min_to_max < 0.5 and r2_max_to_min < 0.5 and r2_cross < 0.5:  # Essentially arbitrary values
-            print(f"WARNING: Poor correlation between fits {sweep.geometry_label}:{sweep.y}.")
-            is_bad_data = True
 
         if normalize:
             sweep.theta_js = np.divide(sweep.theta_js, theta_j_max)
@@ -411,11 +473,11 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
             if error_bars:
                 ax.errorbar(mean_p_bars, means, yerr=y_errs, capsize=3, fmt=marker, color=c, zorder=zorder)
                 if verbose:
-                    print(f"{sweep.geometry_label}:{sweep.y}, Mean q = {q}\n")
+                    print(f"{sweep.geometry_label}:{sweep.y}, Mean q = {q:.3f}\n")
             else:
                 ax.scatter(sweep.p_bars, sweep.theta_js, marker=marker, color=c, zorder=zorder)
                 if verbose:
-                    print(f"{sweep.geometry_label}:{sweep.y}, Mean q = {q}\n")
+                    print(f"{sweep.geometry_label}:{sweep.y}, Mean q = {q:.3f}\n")
 
     print(f"Number of rejected data sets = {num_rejected_sets}")
 
