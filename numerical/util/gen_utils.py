@@ -151,6 +151,8 @@ def gen_varied_slot(n=3000, h=3, w=2, length=50, depth=50, w_thresh=6, density_r
     :param density_ratio: Ratio of densities
     :return: centroids, normals, areas
     """
+    if w_thresh < 0:
+        raise ValueError(f"gen_varied_slot w_thresh cannot be less than zero ({w_thresh})")
     if w * w_thresh > length:
         warnings.warn("w threshold too high, reverting to gen_slot")
         return gen_slot(n, h, w, length, depth)
