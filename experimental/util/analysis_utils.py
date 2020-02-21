@@ -240,12 +240,6 @@ def calculate_displacement(frames, frame_rate, trigger_out_delay, save_path=None
     peak_idxs, peak_areas = dd.findPeaks(idxs, areas, kernel=5)
 
     if len(peak_idxs) > 1:
-        # TODO: Figure out what on *earth* I was doing here.
-        # ptp_dx = xs[peak_idxs[1]] - xs[peak_idxs[0]]
-        # ptp_dy = ys[peak_idxs[1]] - ys[peak_idxs[0]]
-        # mean_dx = np.mean(np.subtract(xs[1:], xs[0]))
-        # mean_dy = xs[peak_idxs[1]] - xs[peak_idxs[0]]
-        # [dx, dy] = np.multiply(vect.unit([mean_dx, mean_dy]), vect.mag([ptp_dx, ptp_dy]))
         dx = xs[peak_idxs[1]] - xs[peak_idxs[0]]
         dy = ys[peak_idxs[1]] - ys[peak_idxs[0]]
 
