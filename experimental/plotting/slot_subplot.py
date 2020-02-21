@@ -3,28 +3,31 @@ from experimental.plotting.analyse_slot import analyse_slot
 import itertools
 import common.util.plotting_utils as plt_util
 
-num_cols = 3
-num_rows = 3
-num_plots = 7
+num_cols = 2
+num_rows = 2
+num_plots = 4
 
-plt_util.initialize_plt()
+plt_util.initialize_plt(line_scale=0.5, capsize=1.5)
 
 config = {
     "use_all_series": True,
     "use_all_dirs": False,
     "normalize": False,
     "plot_fits": False,
-    "skip_bad_data": False,
+    "skip_bad_data": True,
     "plot_means": False,
     "labelled": False,
     "label_tags": False,
     "colours": True,
     "error_bars": True,
-    "show_title": False,
     "do_shift": True,
     "verbose": False,
     "plot_predicted": False
 }
+
+config["use_all_series"] = False
+config["colours"] = False
+config["plot_predicted"] = True
 
 fig_width = 5.31445  # From LaTeX
 
@@ -41,8 +44,9 @@ fig_height = ax_width * num_rows + bottom_padding + top_padding + (num_rows - 1)
 
 fig, axes = plt.subplots(num_rows, num_cols, sharex='none', sharey="all", figsize=(fig_width, fig_height))
 # labels = "abcdefghijk"
-# labels = ["w1h3, q=1.94", "w2h3a, q=2.29", "w2h6, q=1.52", "w4h12, q=3.43"]
-labels = ["w1h3", "w2h3a", "w2h3b", "w2h6", "w2h9", "w2h12", "w4h12"]
+# labels = ["w1h3\nq=1.94", "w2h3a\nq=2.29", "w2h6\nq=1.52", "w4h12\nq=3.43"]
+# labels = ["w1h3", "w2h3a", "w2h3b", "w2h6", "w2h9", "w2h12", "w4h12"]
+labels = ["($a$)", "($b$)", "($c$)", "($d$)", "($e$)", "($f$)", "($g$)"]
 
 for j, i in itertools.product(range(num_rows), range(num_cols)):
     if num_cols * j + i >= num_plots:
