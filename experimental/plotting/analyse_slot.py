@@ -115,6 +115,75 @@ class SweepData:
         return (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_err_theta_j), \
                (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_err_theta_j)
 
+    def get_curve_fits_cubic(self, range_fact=1.5):
+        """
+        Computes and returns curve fits for the two peaks of a sweep. Returns two tuples, one each for the maximum and
+        minimum peaks. Each tuple contains the position of the peak, value at the peak, and curve fit polynomial
+        coefficients.
+        :param range_fact: How far beyond the highest mean value to use for peak fitting.
+        :returns: (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_err_theta_j),
+                 (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_err_theta_j)
+        """
+        _, mean_xs, mean_theta_js = self.get_mean_data()
+        srtd_mean_xs, srtd_mean_theta_js = zip(*sorted(zip(mean_xs, mean_theta_js),
+                                                       key=lambda k: k[1]))  # Sorted by theta_j
+        max_peak_x = srtd_mean_xs[-1]
+        min_peak_x = srtd_mean_xs[0]
+
+        x_range = range_fact * (max_peak_x - min_peak_x) / 2
+
+        ################
+        # Maximum peak #
+        ################
+        max_xs, max_theta_js = zip(*[(x, theta_j) for x, theta_j in zip(mean_xs, mean_theta_js)
+                                     if 0 < x < x_range])
+        max_weights = [1 / 0.015085955056793596] * len(max_xs)
+        max_poly_coeffs, max_cov = np.polyfit(max_xs, max_theta_js, 3, cov='unscaled', w=max_weights)
+
+        a, b, c, d = max_poly_coeffs
+        if 4 * b ** 2 - 12 * a * c < 0:
+            raise ValueError("Invalid curve fit.")  # TODO: Handle this better.
+        max_peak_x_pos = (-2 * b + np.sqrt(4 * b ** 2 - 12 * a * c)) / (6 * a)
+        pos_deriv = 6 * a * max_peak_x_pos + 2 * b
+
+        max_peak_x_neg = (-2 * b - np.sqrt(4 * b ** 2 - 12 * a * c)) / (6 * a)
+        neg_deriv = 6 * a * max_peak_x_neg + 2 * b
+
+        if pos_deriv <= 0:
+            max_peak_x = max_peak_x_pos
+        elif neg_deriv <= 0:
+            max_peak_x = max_peak_x_neg
+        else:
+            raise ValueError("Invalid curve fit.")
+        max_peak_theta_j = np.polyval(max_poly_coeffs, max_peak_x)
+
+        ################
+        # Minimum peak #
+        ################
+        min_xs, min_theta_js = zip(*[(x, theta_j) for x, theta_j in zip(mean_xs, mean_theta_js)
+                                     if -x_range < x < 0])
+        min_weights = [1 / 0.015085955056793596] * len(min_xs)
+        min_poly_coeffs, min_cov = np.polyfit(min_xs, min_theta_js, 3, cov='unscaled', w=min_weights)
+
+        a, b, c, d = min_poly_coeffs
+        if 4 * b ** 2 - 12 * a * c < 0:
+            raise ValueError("Invalid curve fit.")  # TODO: Handle this better.
+        min_peak_x_pos = (-2 * b + np.sqrt(4 * b ** 2 - 12 * a * c)) / (6 * a)
+        pos_deriv = 6 * a * min_peak_x_pos + 2 * b
+
+        min_peak_x_neg = (-2 * b - np.sqrt(4 * b ** 2 - 12 * a * c)) / (6 * a)
+        neg_deriv = 6 * a * min_peak_x_neg + 2 * b
+
+        if pos_deriv >= 0:
+            min_peak_x = min_peak_x_pos
+        elif neg_deriv >= 0:
+            min_peak_x = min_peak_x_neg
+        else:
+            raise ValueError("Invalid curve fit.")
+        min_peak_theta_j = np.polyval(min_poly_coeffs, min_peak_x)
+
+        return (max_peak_x, max_peak_theta_j, max_poly_coeffs, 0), \
+               (min_peak_x, min_peak_theta_j, min_poly_coeffs, 0)
 
     def check_curve_fits(self, max_peak_x, max_peak_theta_j, max_poly_coeffs,
                          min_peak_x, min_peak_theta_j, min_poly_coeffs,
