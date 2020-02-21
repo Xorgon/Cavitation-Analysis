@@ -19,6 +19,13 @@ def select_file(start_path, create_window=True):
     return file_path
 
 
+def select_multiple_files(start_path, create_window=True):
+    if create_window:
+        window = QApplication([])
+    file_paths = QFileDialog.getOpenFileNames(None, "Select File", start_path)[0]
+    return file_paths
+
+
 def select_dir(start_path, create_window=True):
     if create_window:
         window = QApplication([])
