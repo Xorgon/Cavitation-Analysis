@@ -12,21 +12,21 @@ import scipy.sparse
 from mpl_toolkits.mplot3d import Axes3D
 
 # ps = [8]
-w = 2
-hs = [1, 2, 4, 8, 16]
+W = 2
+Hs = [1, 2, 4, 8, 16]
 
 n_samples = 28
 
 m_0 = 1
 n = 20000
 
-for h in hs:
-    centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=25, w_thresh=3, density_ratio=0.1)
+for H in Hs:
+    centroids, normals, areas = gen.gen_varied_slot(n=n, H=H, W=W, length=50, depth=25, w_thresh=3, density_ratio=0.1)
     print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
     R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
     R_inv = scipy.linalg.inv(R_matrix)
 
-    ds = np.linspace(0, 2 * (w / 2), n_samples)
+    ds = np.linspace(0, 2 * (W / 2), n_samples)
 
     theta_b_split = np.pi / 3
     theta_b_lim = (0, np.pi / 2 - 0.1)
@@ -55,7 +55,7 @@ for h in hs:
     flat_ds = ds_mat.flatten()
     flat_theta_bs = theta_bs_mat.flatten()
     os.makedirs("model_outputs/slot_alt_param/", exist_ok=True)
-    file = open(f"model_outputs/slot_alt_param/h_{h}_w_{w}_n_{n}.csv", "w")
+    file = open(f"model_outputs/slot_alt_param/h_{H}_w_{W}_n_{n}.csv", "w")
     file.write("d, theta_b, theta_j\n")
     for d, theta_b, theta_j in zip(flat_ds, flat_theta_bs, theta_js):
         file.write(f"{d}, {theta_b}, {theta_j}\n")

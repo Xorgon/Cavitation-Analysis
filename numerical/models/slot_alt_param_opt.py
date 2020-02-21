@@ -24,11 +24,11 @@ def find_slot_peak(theta_b, R_inv, centroids, normals, areas, length):
 
 
 n = 20000
-w = 2
-h = 2
+W = 2
+H = 2
 length = 50
 
-centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=length, depth=25, w_thresh=3,
+centroids, normals, areas = gen.gen_varied_slot(n=n, H=H, W=W, length=length, depth=25, w_thresh=3,
                                                 density_ratio=0.1)
 print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
 R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
@@ -41,7 +41,7 @@ for t_b in theta_bs:
     ds.append(d)
 
 initialize_plt(font_size=18, line_scale=2)
-plt.plot(theta_bs, 2 * np.array(ds) / w)
+plt.plot(theta_bs, 2 * np.array(ds) / W)
 plt.xlabel("$\\theta_b$")
 plt.ylabel("$(2d / w)^\\star$")
 plt.show()

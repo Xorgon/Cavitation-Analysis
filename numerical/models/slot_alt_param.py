@@ -11,8 +11,8 @@ import common.util.file_utils as file_utils
 import scipy.sparse
 from mpl_toolkits.mplot3d import Axes3D
 
-w = 2
-h = 6
+W = 2
+H = 6
 
 n_samples = 28
 
@@ -20,12 +20,12 @@ m_0 = 1
 n = 20000
 
 # centroids, normals, areas = gen.gen_slot(n=n, h=h, w=w, length=50, depth=50)
-centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=25, w_thresh=3, density_ratio=0.1)
+centroids, normals, areas = gen.gen_varied_slot(n=n, H=H, W=W, length=50, depth=25, w_thresh=3, density_ratio=0.1)
 print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
 R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
 R_inv = scipy.linalg.inv(R_matrix)
 
-ds = np.linspace(0, 2 * (w / 2), n_samples)
+ds = np.linspace(0, 2 * (W / 2), n_samples)
 
 theta_b_split = np.pi / 3
 theta_b_lim = (0, np.pi / 2 - 0.1)
@@ -55,7 +55,7 @@ theta_js = np.arctan2(vels[:, 1], vels[:, 0]) + 0.5 * np.pi
 flat_ds = ds_mat.flatten()
 flat_theta_bs = theta_bs_mat.flatten()
 os.makedirs("model_outputs/slot_alt_param/", exist_ok=True)
-file = open(f"model_outputs/slot_alt_param/h_{h}_w_{w}_n_{n}.csv", "w")
+file = open(f"model_outputs/slot_alt_param/h_{H}_w_{W}_n_{n}.csv", "w")
 file.write("d, theta_b, theta_j\n")
 for d, theta_b, theta_j in zip(flat_ds, flat_theta_bs, theta_js):
     file.write(f"{d}, {theta_b}, {theta_j}\n")
@@ -67,12 +67,12 @@ ax = plt.gca(projection='3d')  # type: Axes3D
 
 # contour = ax.contour(ds_mat, theta_bs_mat, theta_js.reshape((n_samples, n_samples)))
 
-surf = ax.plot_surface(ds_mat / (w / 2), theta_bs_mat, theta_js.reshape((n_samples, n_samples)),
+surf = ax.plot_surface(ds_mat / (W / 2), theta_bs_mat, theta_js.reshape((n_samples, n_samples)),
                        cmap=cm.get_cmap('coolwarm'))
 
 ax.set_zlim((0, 0.9))
 ax.set_xlabel("$2 d / w$")
 ax.set_ylabel("$\\theta_b$")
-ax.set_title(f"h / w = {h / w:.2f}")
+ax.set_title(f"h / w = {H / W:.2f}")
 fig.colorbar(surf)
 plt.show()

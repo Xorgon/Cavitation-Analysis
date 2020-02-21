@@ -7,45 +7,45 @@ import numerical.util.gen_utils as gen
 import numerical.bem as bem
 
 n_points = 16
-w = 2
-hs = np.linspace(1, 10, n_points)
-qs = np.linspace(1, 10, n_points)
+W = 2
+Hs = np.linspace(1, 10, n_points)
+Ys = np.linspace(1, 10, n_points)
 
-print(f"hs = {hs}")
-print(f"qs = {qs}")
+print(f"Hs = {Hs}")
+print(f"Ys = {Ys}")
 
-last_h = None
-last_q = None
+last_H = None
+last_Y = None
 
 n = 20000
-w_thresh = 12
-density_ratio = 0.25
+w_thresh = 15
+density_ratio = 0.15
 
-save_file = open(f"model_outputs/peak_sweep_{n}_{n_points}x{n_points}.csv", 'a')
+save_file = open(f"model_outputs/peak_sweep_{n}_{n_points}x{n_points}_plate_500.csv", 'a')
 
-for h in hs:
-    if last_h is not None and (h < last_h or (np.isclose(h, last_h) and np.isclose(last_q, np.max(qs)))):
+for H in Hs:
+    if last_H is not None and (H < last_H or (np.isclose(H, last_H) and np.isclose(last_Y, np.max(Ys)))):
         continue  # Skip already completed slots.
-    centroids, normals, areas = gen.gen_varied_slot(n=n, h=h, w=w, length=50, depth=50,
+    centroids, normals, areas = gen.gen_varied_slot(n=n, H=H, W=W, length=500, depth=50,
                                                     w_thresh=w_thresh,
                                                     density_ratio=density_ratio)
-    print("Requested n = {0}, using n = {1} for h = {2}, w = {3}.".format(n, len(centroids), h, w))
+    print("Requested n = {0}, using n = {1} for H = {2}, W = {3}.".format(n, len(centroids), H, W))
     actual_n = len(centroids)
     R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
     R_inv = scipy.linalg.inv(R_matrix)
-    for q in qs:
-        if last_h is not None and last_q is not None and np.isclose(h, last_h) and \
-                (q < last_q or np.isclose(q, last_q)):
+    for Y in Ys:
+        if last_H is not None and last_Y is not None and np.isclose(H, last_H) and \
+                (Y < last_Y or np.isclose(Y, last_Y)):
             continue  # Skip already completed positions in the last completed slot.
-        _, p, theta_j, _ = find_slot_peak(w, q, h, actual_n,
+        _, X, theta_j, _ = find_slot_peak(W, Y, H, actual_n,
                                           varied_slot_density_ratio=density_ratio, density_w_thresh=w_thresh,
                                           centroids=centroids, normals=normals, areas=areas, R_inv=R_inv)
 
-        center_p_bar = 0.05
-        near_center_vel, _ = bem.get_jet_dir_and_sigma([center_p_bar, q, 0], centroids, normals, areas, R_inv=R_inv)
+        center_x = 0.05
+        near_center_vel, _ = bem.get_jet_dir_and_sigma([center_x, Y, 0], centroids, normals, areas, R_inv=R_inv)
         center_grad = np.arctan2(near_center_vel[1], near_center_vel[0]) + np.pi / 2
 
-        save_file.write(f"{h / w},{q / w},{theta_j},{2 * p / w},{center_grad / center_p_bar}\n")
+        save_file.write(f"{H / W},{Y / W},{theta_j},{2 * X / W},{center_grad / center_x}\n")
 
         # Make sure the data is saved to disk every time.
         save_file.flush()
