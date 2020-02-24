@@ -73,14 +73,15 @@ class SweepData:
             mean_theta_js.append(np.mean(theta_js))
         return m_xs_set, mean_xs, mean_theta_js
 
-    def get_curve_fits(self, range_fact=1.5):
+    def get_curve_fits(self, range_fact=1.5, std=0.015085955056793596):
         """
         Computes and returns curve fits for the two peaks of a sweep. Returns two tuples, one each for the maximum and
         minimum peaks. Each tuple contains the position of the peak, value at the peak, and curve fit polynomial
         coefficients.
         :param range_fact: How far beyond the highest mean value to use for peak fitting.
-        :returns: (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_err_theta_j),
-                 (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_err_theta_j)
+        :param std: Standard deviation for data set.
+        :returns: (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_std_theta_j),
+                 (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_std_theta_j)
         """
         _, mean_xs, mean_theta_js = self.get_mean_data()
         srtd_mean_xs, srtd_mean_theta_js = zip(*sorted(zip(mean_xs, mean_theta_js),
@@ -92,37 +93,38 @@ class SweepData:
 
         max_xs, max_theta_js = zip(*[(x, theta_j) for x, theta_j in zip(mean_xs, mean_theta_js)
                                      if 0 < x < x_range])
-        max_weights = [1 / 0.015085955056793596] * len(max_xs)
+        max_weights = [1 / std ** 2] * len(max_xs)
         max_poly_coeffs, max_cov = np.polyfit(max_xs, max_theta_js, 2, cov='unscaled', w=max_weights)
         max_peak_theta_j = - max_poly_coeffs[1] ** 2 / (4 * max_poly_coeffs[0]) + max_poly_coeffs[2]  # -b^2 / (4a) + c
         max_peak_x = - max_poly_coeffs[1] / (2 * max_poly_coeffs[0])  # -b / (2a)
 
         a, b, c = max_poly_coeffs
         s_a, s_b, s_c = max_cov.diagonal()
-        max_err_theta_j = b ** 2 * s_a ** 2 / (4 * a ** 2) - b * s_b ** 2 / (2 * a) + s_c ** 2
+        max_std_theta_j = 3 * std / len(max_xs)  # M * std / N
 
         min_xs, min_theta_js = zip(*[(x, theta_j) for x, theta_j in zip(mean_xs, mean_theta_js)
                                      if - x_range < x < 0])
-        min_weights = [1 / 0.015085955056793596] * len(min_xs)
+        min_weights = [1 / std ** 2] * len(min_xs)
         min_poly_coeffs, min_cov = np.polyfit(min_xs, min_theta_js, 2, cov='unscaled', w=min_weights)
         min_peak_theta_j = - min_poly_coeffs[1] ** 2 / (4 * min_poly_coeffs[0]) + min_poly_coeffs[2]  # -b^2 / (4a) + c
         min_peak_x = - min_poly_coeffs[1] / (2 * min_poly_coeffs[0])
 
         a, b, c = max_poly_coeffs
         s_a, s_b, s_c = max_cov.diagonal()
-        min_err_theta_j = b ** 2 * s_a ** 2 / (4 * a ** 2) - b * s_b ** 2 / (2 * a) + s_c ** 2
+        min_std_theta_j = 3 * std / len(min_xs)  # M * std / N
 
-        return (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_err_theta_j), \
-               (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_err_theta_j)
+        return (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_std_theta_j), \
+               (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_std_theta_j)
 
-    def get_curve_fits_cubic(self, range_fact=1.5):
+    def get_curve_fits_cubic(self, range_fact=1.5, std=0.015085955056793596):
         """
         Computes and returns curve fits for the two peaks of a sweep. Returns two tuples, one each for the maximum and
         minimum peaks. Each tuple contains the position of the peak, value at the peak, and curve fit polynomial
         coefficients.
         :param range_fact: How far beyond the highest mean value to use for peak fitting.
-        :returns: (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_err_theta_j),
-                 (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_err_theta_j)
+        :param std: Standard deviation for data set.
+        :returns: (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_std_theta_j),
+                 (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_std_theta_j)
         """
         _, mean_xs, mean_theta_js = self.get_mean_data()
         srtd_mean_xs, srtd_mean_theta_js = zip(*sorted(zip(mean_xs, mean_theta_js),
@@ -137,7 +139,7 @@ class SweepData:
         ################
         max_xs, max_theta_js = zip(*[(x, theta_j) for x, theta_j in zip(mean_xs, mean_theta_js)
                                      if 0 < x < x_range])
-        max_weights = [1 / 0.015085955056793596] * len(max_xs)
+        max_weights = [1 / std ** 2] * len(max_xs)
         max_poly_coeffs, max_cov = np.polyfit(max_xs, max_theta_js, 3, cov='unscaled', w=max_weights)
 
         a, b, c, d = max_poly_coeffs
@@ -156,13 +158,14 @@ class SweepData:
         else:
             raise ValueError("Invalid curve fit.")
         max_peak_theta_j = np.polyval(max_poly_coeffs, max_peak_x)
+        max_std_theta_j = 4 * std / len(max_xs)  # M * std / N
 
         ################
         # Minimum peak #
         ################
         min_xs, min_theta_js = zip(*[(x, theta_j) for x, theta_j in zip(mean_xs, mean_theta_js)
                                      if -x_range < x < 0])
-        min_weights = [1 / 0.015085955056793596] * len(min_xs)
+        min_weights = [1 / std ** 2] * len(min_xs)
         min_poly_coeffs, min_cov = np.polyfit(min_xs, min_theta_js, 3, cov='unscaled', w=min_weights)
 
         a, b, c, d = min_poly_coeffs
@@ -181,9 +184,10 @@ class SweepData:
         else:
             raise ValueError("Invalid curve fit.")
         min_peak_theta_j = np.polyval(min_poly_coeffs, min_peak_x)
+        min_std_theta_j = 4 * std / len(min_xs)  # M * std / N
 
-        return (max_peak_x, max_peak_theta_j, max_poly_coeffs, 0), \
-               (min_peak_x, min_peak_theta_j, min_poly_coeffs, 0)
+        return (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_std_theta_j), \
+               (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_std_theta_j)
 
     def check_curve_fits(self, max_peak_x, max_peak_theta_j, max_poly_coeffs,
                          min_peak_x, min_peak_theta_j, min_poly_coeffs,

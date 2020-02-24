@@ -52,8 +52,8 @@ for i in range(num_sweeps):
             fake_sweep.add_point(x, x, rand_theta_js, Y)
 
     try:
-        (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_theta_j_err), \
-        (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_theta_j_err) = fake_sweep.get_curve_fits(range_fact=0.5)
+        (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_theta_j_std), \
+        (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_theta_j_std) = fake_sweep.get_curve_fits(range_fact=0.5)
     except ValueError:
         continue
 

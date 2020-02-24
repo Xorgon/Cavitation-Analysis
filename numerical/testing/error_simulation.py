@@ -46,13 +46,13 @@ for p_bar, theta_j in zip(xs, theta_js):
         all_rand_theta_js.append(rand_theta_j)
         fake_sweep.add_point(p_bar, p_bar, rand_theta_js, Y)
 
-(fit_max_peak_x, fit_max_peak_theta_j, max_poly_coeffs, max_theta_j_err), \
-(fit_min_peak_x, fit_min_peak_theta_j, min_poly_coeffs, min_theta_j_err) = fake_sweep.get_curve_fits(range_fact=1.5)
+(fit_max_peak_x, fit_max_peak_theta_j, max_poly_coeffs, max_theta_j_std), \
+(fit_min_peak_x, fit_min_peak_theta_j, min_poly_coeffs, min_theta_j_std) = fake_sweep.get_curve_fits(range_fact=1.5)
 
 fit_x_star = (fit_max_peak_x - fit_min_peak_x) / 2
 fit_theta_j_star = (fit_max_peak_theta_j - fit_min_peak_theta_j) / 2
 
-print(max_theta_j_err, min_theta_j_err)
+print(max_theta_j_std, min_theta_j_std)
 
 peak_fit_range = 2.5
 max_peak_x = xs[np.argmax(theta_js)]

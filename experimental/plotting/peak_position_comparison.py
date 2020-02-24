@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 import scipy
+from scipy import stats
 
 from experimental.plotting.analyse_slot import SweepData, select_data_series
 import experimental.util.analysis_utils as au
@@ -80,8 +81,8 @@ for i in range(2):
     exp_theta_j_stars = []
     theta_j_errs = []
     for sweep in sweeps:
-        (max_fitted_peak_X, max_fitted_peak, _, max_err_theta_j), \
-        (min_fitted_peak_X, min_fitted_peak, _, min_err_theta_j) \
+        (max_fitted_peak_X, max_fitted_peak, _, max_std_theta_j), \
+        (min_fitted_peak_X, min_fitted_peak, _, min_std_theta_j) \
             = sweep.get_curve_fits()
         Ys.append(np.mean(sweep.Ys))
         Hs.append(sweep.H)
@@ -92,7 +93,11 @@ for i in range(2):
 
         exp_x_stars.append(x_star)
         exp_theta_j_stars.append(theta_j_star)
-        theta_j_errs.append((max_err_theta_j + min_err_theta_j) / 2)
+        mean_std = (max_std_theta_j + min_std_theta_j) / 2
+        # https://stackoverflow.com/a/28243282/5270376
+
+        interval = stats.norm.interval(0.99, loc=np.mean(theta_j_star), scale=mean_std)
+        theta_j_errs.append(interval[1] - theta_j_star)
 
     # Should just be equal
     H = np.mean(Hs)
