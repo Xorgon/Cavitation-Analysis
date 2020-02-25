@@ -249,6 +249,94 @@ def gen_varied_slot(n=3000, H=3, W=2, length=50, depth=50, w_thresh=6, density_r
     return centroids, normals, areas
 
 
+def gen_varied_step(n=3000, H=3, length=50, depth=50, thresh_dist=6, density_ratio=0.25, save_to_files=False):
+    """
+    Generates a step with varying panel density.
+
+    :param n: Approximate number of panels
+    :param H: Step height
+    :param length: Geometry length
+    :param depth: Geometry depth
+    :param thresh_dist: threshold at which to reduce density
+    :param density_ratio: Ratio of densities
+    :return: centroids, normals, areas
+    """
+    if thresh_dist < 0:
+        raise ValueError(f"gen_varied_step w_thresh cannot be less than zero ({thresh_dist})")
+    if thresh_dist > length / 2:
+        warnings.warn("threshold distance too high.")
+        raise ValueError
+
+    centroids = []
+    normals = []
+    areas = []
+
+    total_surface_length = length + H
+    dense_surface_length = H + thresh_dist * 2
+    sparse_surface_length = total_surface_length - dense_surface_length
+
+    zeta = dense_surface_length / (density_ratio * sparse_surface_length)
+    n_dense = n * zeta / (1 + zeta)
+    n_sparse = n - n_dense
+
+    n_wall = int(round(n_dense * H / dense_surface_length))
+    n_dense_surface_boundary = int(round((n_dense - n_wall) / 2))
+    n_sparse_surface_boundary = int(round(n_sparse / 2))
+
+    ######################
+    # Surface boundaries #
+    ######################
+    filename = "model_outputs/step_left_sparse.csv" if save_to_files else None
+    p_centroids, p_normals, p_areas = gen_plane([0, -H, - depth / 2],
+                                                [0, -H, depth / 2],
+                                                [thresh_dist, -H, - depth / 2],
+                                                n_dense_surface_boundary, filename=filename)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    filename = "model_outputs/step_left_dense.csv" if save_to_files else None
+    p_centroids, p_normals, p_areas = gen_plane([thresh_dist, -H, - depth / 2],
+                                                [thresh_dist, -H, depth / 2],
+                                                [length / 2, -H, - depth / 2],
+                                                n_sparse_surface_boundary, filename=filename)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    filename = "model_outputs/step_right_dense.csv" if save_to_files else None
+    p_centroids, p_normals, p_areas = gen_plane([-thresh_dist, 0, - depth / 2],
+                                                [-thresh_dist, 0, depth / 2],
+                                                [0, 0, - depth / 2],
+                                                n_dense_surface_boundary, filename=filename)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    filename = "model_outputs/step_right_sparse.csv" if save_to_files else None
+    p_centroids, p_normals, p_areas = gen_plane([-length / 2, 0, - depth / 2],
+                                                [-length / 2, 0, depth / 2],
+                                                [-thresh_dist, 0, - depth / 2],
+                                                n_sparse_surface_boundary, filename=filename)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    ######################
+    # Step wall         #
+    ######################
+    filename = "model_outputs/step_wall.csv" if save_to_files else None
+    p_centroids, p_normals, p_areas = gen_plane([0, 0, - depth / 2],
+                                                [0, 0, depth / 2],
+                                                [0, -H, - depth / 2],
+                                                n_wall, filename=filename)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    return centroids, normals, areas
+
+
 def gen_corner(n=3000, length=25, depth=50, angle=np.pi / 2):
     centroids = []
     normals = []
