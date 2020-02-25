@@ -135,7 +135,7 @@ ax.set_yticklabels(ax.get_yticks() / 2)  # Hack to get scaling and sizing right.
 plt.scatter(np.divide(c_xs, 0.5 * W), np.divide(c_ys, 0.5 * W), marker='.', color='k')
 # for x, y, angle in zip(xs, ys, angles):
 #     plt.scatter(x, y, marker=(3, 0, np.degrees(angle)), color='k')
-
+plt.tick_params(axis='x', which='both', labelbottom=False)
 target_y = 1
 Y_idx = int(np.argmin(np.abs(np.subtract(np.divide(Ys, W), target_y))))
 line_y = Ys[Y_idx] / W
