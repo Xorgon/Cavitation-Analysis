@@ -10,12 +10,18 @@ import numpy as np
 
 import common.util.plotting_utils as plt_util
 import experimental.util.analysis_utils as au
+import common.util.file_utils as file
+from experimental.plotting.analyse_slot import SweepData
 
 plt_util.initialize_plt()
 
-reading_ys = [1.0, 2.0]
+# reading_ys = [1.0, 2.0]
+# dir_path = "../../../../Data/SlotSweeps/W2H3b/"
 
-dir_path = "../../../../Data/SlotErrorMeasurement/"
+# reading_ys = [5.0, 5.5, 6.0, 6.5, 7.0]
+# dir_path = "../../../../Data/SlotSweeps/W2H3a/"
+
+dir_path = file.select_dir("../../../../Data/SlotSweeps")
 
 sys.path.append(dir_path)
 import params
@@ -25,6 +31,8 @@ y_offset = params.upper_surface_y
 
 readings = au.load_readings(dir_path + "readings_dump.csv")
 readings = sorted(readings, key=lambda r: r.m_x)  # type: List[au.Reading]
+
+reading_ys = sorted(set([reading.m_y for reading in readings]))
 
 fig_width = 5.31445  # From LaTeX
 fig, axes = plt.subplots(1, len(reading_ys), sharex="all", sharey="all", figsize=(fig_width, fig_width / 2))

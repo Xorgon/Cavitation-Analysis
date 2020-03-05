@@ -6,7 +6,7 @@ from common.util.plotting_utils import initialize_plt
 import numpy as np
 import matplotlib.pyplot as plt
 
-dirs = ["../../../../Data/SlotErrorMeasurement/"]
+dirs = ["../../../../Data/SlotSweeps/W2H3b/"]
 root_dir = "../../../../Data/SlotSweeps"
 for root, _, files in os.walk(root_dir):
     if "params.py" in files:

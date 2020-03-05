@@ -10,7 +10,7 @@ from experimental.util.analysis_utils import load_readings, Reading
 from experimental.util.file_utils import select_dir
 from common.util.plotting_utils import initialize_plt
 
-dir_path = "../../../../Data/SlotErrorMeasurement/"
+dir_path = "../../../../Data/SlotSweeps/W2H3b/"
 
 sys.path.append(dir_path)
 import params

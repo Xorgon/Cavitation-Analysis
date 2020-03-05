@@ -10,7 +10,7 @@ import numpy as np
 import experimental.util.analysis_utils as au
 from common.util.plotting_utils import initialize_plt
 
-dir_path = "../../../../Data/SlotErrorMeasurement/"
+dir_path = "../../../../Data/SlotSweeps/W2H3b/"
 
 sys.path.append(dir_path)
 import params

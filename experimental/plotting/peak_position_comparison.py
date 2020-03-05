@@ -17,8 +17,8 @@ import numerical.util.gen_utils as gen
 import numerical.bem as bem
 from common.util.plotting_utils import initialize_plt
 
-dirs = ['C:/Users/eda1g15/OneDrive - University of Southampton/Research/Slot Geometries/Data/SlotSweeps/w1h3/',
-        'C:/Users/eda1g15/OneDrive - University of Southampton/Research/Slot Geometries/Data/SlotSweeps/w2h3/']
+dirs = ['C:/Users/eda1g15/OneDrive - University of Southampton/Research/Slot Geometries/Data/SlotSweeps/W1H3/',
+        'C:/Users/eda1g15/OneDrive - University of Southampton/Research/Slot Geometries/Data/SlotSweeps/W2H3a/']
 
 initialize_plt()
 fig, axes = plt.subplots(2, 1, sharex='all', figsize=(5.31445, 4))
