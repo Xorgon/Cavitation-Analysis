@@ -61,7 +61,7 @@ for idx in frame_idxs:
     times.append(idx / fps - firing_delay)
 
 width = tile_br_corner[0] - tile_tl_corner[0] + 2
-height = tile_br_corner[1] - tile_tl_corner[1]
+height = (tile_br_corner[1] - tile_tl_corner[1]) * 1.2
 
 surface_y_px = scale * (mov.height - (params.upper_surface_y - reading.m_y) / params.mm_per_px)
 floor_y_px = scale * (mov.height - (params.upper_surface_y - params.slot_height - reading.m_y) / params.mm_per_px)
@@ -97,17 +97,17 @@ for k, idx in enumerate(frame_idxs):
     ax.set_xlim((scale * tile_tl_corner[0], scale * tile_br_corner[0]))
     ax.set_ylim((scale * tile_br_corner[1], scale * tile_tl_corner[1]))
     plt.text((tile_br_corner[0] - 0.05 * height) * scale,
-             (tile_br_corner[1] - 0.05 * height) * scale,
-             f"$t = {times[k] * 1e6:.0f} \mu s$", horizontalalignment='right', verticalalignment='bottom',
-             color="white")
+             (tile_br_corner[1] + 0.05 * height) * scale,
+             f"$t = {times[k] * 1e6:.0f} \mu s$", horizontalalignment='right', verticalalignment='top',
+             color="black")
     if k == 0:
         sbar_x_max = scale * (tile_br_corner[0] - 0.1 * width)
         sbar_x_min = sbar_x_max - scale * 1 / params.mm_per_px
-        sbar_y_pos = scale * (tile_tl_corner[1] + 0.15 * height)
+        sbar_y_pos = scale * (tile_tl_corner[1] + 0.12 * height)
         ax.plot([sbar_x_min, sbar_x_max],
                 [sbar_y_pos, sbar_y_pos], 'w', linewidth=2)
         ax.annotate("$1 mm$", [0.5 * (sbar_x_min + sbar_x_max), sbar_y_pos],
                     [0.5 * (sbar_x_min + sbar_x_max), sbar_y_pos - scale * 0.01 * height],
                     color="white", horizontalalignment='center', verticalalignment='bottom')
-plt.subplots_adjust(left=0, right=1, top=1, bottom=0, wspace=0.05, hspace=0.05)
+plt.subplots_adjust(left=0, right=1, top=1, bottom=0.15, wspace=0.05, hspace=0.05)
 plt.show()
