@@ -324,13 +324,7 @@ def select_data_series(use_all_dirs=True, num_series=None, use_defaults=True, ve
 
 def plot_prediction_file(prediction_file, ax, normalize=False, x_star=None, theta_star=None, label="Numerical", c='k'):
     x_min, x_max = ax.get_xlim()  # Keep track of original x limits.
-    predicted_xs = []
-    predicted_theta_js = []
-    f = open(prediction_file)
-    for line in f.readlines():
-        split = line.strip().split(",")
-        predicted_xs.append(float(split[0]))
-        predicted_theta_js.append(float(split[1]))
+    predicted_xs, predicted_theta_js = file.csv_to_lists("", prediction_file, has_headers=True)
     if x_star is None or theta_star is None:
         x_star, theta_star = sorted(zip(predicted_xs, predicted_theta_js), key=lambda k: k[1])[-1]
     if normalize:

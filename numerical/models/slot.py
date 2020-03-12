@@ -94,4 +94,4 @@ for Y in Ys:
             file_path = f"{out_dir}/W{W:.2f}H{H:.2f}Y{Y:.2f}_bem_slot_prediction_{n}_{density_ratio}_{w_thresh}" \
                         f"{alph[i]}.csv"
             i += 1
-        file.array_to_csv("", file_path, arr)
+        file.lists_to_csv("", file_path, [xs, thetas], headers=["x", "theta"])
