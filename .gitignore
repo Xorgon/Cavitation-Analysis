@@ -10,3 +10,4 @@ __pycache__*
 
 # Outputs
 numerical/models/model_outputs/*
+experimental/plotting/sweeps/*
