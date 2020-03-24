@@ -90,7 +90,7 @@ def load_readings(filename):
 
     readings = []
 
-    for line in lines:
+    for line in lines[1:]:
         if line[0] == "#":
             continue
         readings.append(Reading.from_str(line))
@@ -385,6 +385,11 @@ def analyse_series(dir_path, frame_shape=(384, 264)):
             to_write += 1
 
         dump_file = open(dir_path + "readings_dump.csv", "a")
+        dump_file.write("index:repeat number, measured x (mm), measured y (mm), measured z (mm), "
+                        "peak-to-peak x displacement (px), peak-to-peak y displacement (px), "
+                        "in-frame bubble position x (px), in-frame bubble position y (px), "
+                        "maximum bubble area (px^2), second maximum of bubble area (px^2), frames between maxima, "
+                        "minimum-to-minimum x displacement (px), minimum-to-minimum y displacement (px)\n")
         for j in range(1, to_write + 1):
             reading = readings[-j]
             if reading.is_complete():
