@@ -6,7 +6,8 @@ from PyQt5.QtWidgets import QFileDialog, QApplication
 def lists_to_csv(file_dir, filename, lists, headers=None, overwrite=False):
     if os.path.exists(file_dir + filename) and not overwrite:
         print(f"Warning: file already exists. {file_dir + filename}")
-    os.makedirs(file_dir, exist_ok=True)
+    if file_dir != "":
+        os.makedirs(file_dir, exist_ok=True)
     file = open(file_dir + filename, "w")
     if headers:
         line = ""
