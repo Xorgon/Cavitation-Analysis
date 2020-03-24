@@ -18,7 +18,7 @@ us = []
 vs = []
 speeds = []
 
-file = open(f"model_outputs/step_vel_data/vel_sweep_n{n}_H{H:.2f}"
+file = open(f"../model_outputs/step_vel_data/vel_sweep_n{n}_H{H:.2f}"
             f"_drat{density_ratio}_thresh{thresh_dist}_len{length}_N{N}.csv", 'r')
 
 for line in file.readlines():
@@ -58,7 +58,7 @@ else:
 c_xs = []
 c_ys = []
 c_zs = []
-centroids_file = open(f"model_outputs/step_vel_data/centroids_n{n}_H{H:.2f}"
+centroids_file = open(f"../model_outputs/step_vel_data/centroids_n{n}_H{H:.2f}"
                       f"_drat{density_ratio}_thresh{thresh_dist}_len{length}.csv", 'r')
 for line in centroids_file.readlines():
     split = line.split(",")
@@ -69,7 +69,7 @@ for line in centroids_file.readlines():
 n_xs = []
 n_ys = []
 n_zs = []
-normals_file = open(f"model_outputs/step_vel_data/normals_n{n}_H{H:.2f}"
+normals_file = open(f"../model_outputs/step_vel_data/normals_n{n}_H{H:.2f}"
                     f"_drat{density_ratio}_thresh{thresh_dist}_len{length}.csv", 'r')
 for line in normals_file.readlines():
     split = line.split(",")
@@ -148,9 +148,8 @@ plt.annotate(f"($a$)", xy=(0, 0), xytext=(0.025, 0.975),
 
 divider = make_axes_locatable(ax)
 cax = divider.append_axes('right', size='3%', pad=0.1)
-plt.colorbar(cnt, label="$\\theta_j$ (rad)", cax=cax, ticks=[-np.pi / 4, -np.pi / 8, 0, np.pi / 8, np.pi / 4])
-cax.set_yticklabels(["$-\\pi / 4$", "$-\\pi / 8$", "0", "$\\pi / 8$", "$\\pi / 4$"])
-
+plt.colorbar(cnt, label="$\\theta_j$ (rad)", cax=cax, ticks=[-np.pi / 8, 0])
+cax.set_yticklabels(["$-\\pi / 8$", "0"])
 lax = divider.append_axes('bottom', 1.2, pad=0.1, sharex=ax)
 theta_js = np.arctan2(vs, us) + np.pi / 2
 line_Xs, line_Ys, line_theta_js = zip(*[(X, Y, theta_j) for X, Y, theta_j in zip(Xs, Ys, theta_js) if Y == line_y])

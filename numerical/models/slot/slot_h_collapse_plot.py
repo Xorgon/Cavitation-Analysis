@@ -12,13 +12,15 @@ import matplotlib.patches as patches
 
 initialize_plt()
 
-H = 2
+Hs = np.linspace(1, 5, 5)
 W = 2
 Xs = np.linspace(-3 * W, 3 * W, 300)
-Ys = np.linspace(1, 5, 5)
+Y = 2
+
+normalize = True
 
 m_0 = 1
-n = 2000
+n = 20000
 
 fig_width = 5.31445
 fig = plt.figure(figsize=(fig_width, fig_width / 2))
@@ -36,24 +38,24 @@ norm_ax.set_xlim(-5.5, 5.5)
 norm_ax.set_ylim(-1.1, 1.1)
 xs = Xs / (0.5 * W)
 
-for i, Y in enumerate(Ys):
-    print(f"Reading Y = {Y}")
-    f_dir = "model_outputs/slot_y_collapse/"
-    f_name = f"y_collapse_n{n}_Y{Y}.csv"
+for i, H in enumerate(Hs):
+    print(f"Reading H = {H}")
+    f_dir = "../model_outputs/slot_h_collapse/"
+    f_name = f"h_collapse_n{n}_H{H}.csv"
     xs, thetas = csv_to_lists(f_dir, f_name, True)
 
     theta_star, x_star = sorted(zip(thetas, xs), key=lambda k: k[0])[-1]
     norm_x_to_plot = np.divide(xs, x_star)
     norm_theta_to_plot = np.divide(thetas, theta_star)
 
-    label_frac = "y"
+    label_frac = "h"
     if i == 0:
-        ax.plot(xs, thetas, label=f"${label_frac} = {Y / W:.2f}$")
-        norm_ax.plot(norm_x_to_plot, norm_theta_to_plot, label=f"${label_frac} = {Y / W:.2f}$")
+        ax.plot(xs, thetas, label=f"${label_frac} = {H / W:.2f}$")
+        norm_ax.plot(norm_x_to_plot, norm_theta_to_plot, label=f"${label_frac} = {H / W:.2f}$")
     else:
-        ax.plot(xs, thetas, label=f"${label_frac} = {Y / W:.2f}$", linestyle="--",
+        ax.plot(xs, thetas, label=f"${label_frac} = {H / W:.2f}$", linestyle="--",
                 dashes=(i, 2 * i))
-        norm_ax.plot(norm_x_to_plot, norm_theta_to_plot, label=f"${label_frac} = {Y / W:.2f}$", linestyle="--",
+        norm_ax.plot(norm_x_to_plot, norm_theta_to_plot, label=f"${label_frac} = {H / W:.2f}$", linestyle="--",
                      dashes=(i, 2 * i))
 
 label_pad = 0
@@ -65,13 +67,13 @@ ax.axvline(x=-1, linestyle='--', color='gray')
 ax.axvline(x=1, linestyle='--', color='gray')
 # ax.legend()
 
-ax.legend(bbox_to_anchor=(0, -0.34, 2.3, .05), loc=10, ncol=len(Ys), mode="expand",
+ax.legend(bbox_to_anchor=(0, -0.34, 2.3, .05), loc=10, ncol=len(Hs), mode="expand",
           borderaxespad=0,
           fancybox=False, edgecolor='k', shadow=False, handlelength=1.5, handletextpad=0.5)
-ax.annotate('($a$)', xy=(0, 0), xytext=(0.05, 0.95), textcoords='axes fraction', horizontalalignment='left',
-            verticalalignment='top')
-norm_ax.annotate('($b$)', xy=(0, 0), xytext=(0.05, 0.95), textcoords='axes fraction',
-                 horizontalalignment='left', verticalalignment='top')
+ax.annotate('($a$)', xy=(0, 0), xytext=(0.115, 0.89), textcoords='figure fraction', horizontalalignment='left',
+            verticalalignment='bottom')
+norm_ax.annotate('($b$)', xy=(0, 0), xytext=(0.61, 0.89), textcoords='figure fraction',
+                 horizontalalignment='left', verticalalignment='bottom')
 # ymin, ymax = ax.get_ylim()
 # ax.set_yticks(np.round(np.linspace(ymin, ymax, 5), 2))
 #
@@ -84,4 +86,5 @@ norm_ax.annotate('($b$)', xy=(0, 0), xytext=(0.05, 0.95), textcoords='axes fract
 # xmin, xmax = norm_ax.get_xlim()
 # norm_ax.set_xticks(np.round(np.linspace(xmin, xmax, 5), 2))
 
+plt.savefig('../model_outputs/h_sweep_plot.pdf')
 plt.show()

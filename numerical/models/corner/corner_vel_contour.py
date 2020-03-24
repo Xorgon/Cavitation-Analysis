@@ -2,7 +2,7 @@ import numpy as np
 import itertools
 import matplotlib.pyplot as plt
 
-from numerical.models.peters_corner import get_peters_corner_jet_dir
+from numerical.models.corner.peters_corner import get_peters_corner_jet_dir
 
 n = 100
 xs = np.linspace(0.05, 1, n)

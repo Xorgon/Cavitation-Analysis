@@ -19,7 +19,7 @@ ax.set_ylabel("$\\theta_b$")
 surfs = []
 
 for h in hs:
-    file = open(f"model_outputs/slot_alt_param/h_{h}_w_{w}_n_{n}.csv", "r")
+    file = open(f"../model_outputs/slot_alt_param/h_{h}_w_{w}_n_{n}.csv", "r")
 
     flat_ds = []
     flat_theta_bs = []
@@ -56,6 +56,6 @@ frames.extend(range(len(surfs) - 2, -1, -1))  # Play backwards
 anim = animation.FuncAnimation(fig, show_surf, frames=frames, interval=1000, fargs=[ax])
 
 writer = animation.FFMpegWriter()
-anim.save('model_outputs/slot_alt_param/animated_surfaces.mp4', writer=writer, dpi=250)
+anim.save('../model_outputs/slot_alt_param/animated_surfaces.mp4', writer=writer, dpi=250)
 
 plt.show()

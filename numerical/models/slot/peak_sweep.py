@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 import os
 
-from numerical.models.slot_opt import find_slot_peak
+from numerical.models.slot.slot_opt import find_slot_peak
 import numerical.util.gen_utils as gen
 import numerical.bem as bem
 
@@ -21,7 +21,8 @@ n = 20000
 w_thresh = 15
 density_ratio = 0.15
 
-save_file = open(f"model_outputs/peak_sweep_{n}_{n_points}x{n_points}_plate_500.csv", 'a')
+os.makedirs("../model_outputs/peak_sweep/", exist_ok=True)
+save_file = open(f"../model_outputs/peak_sweep/peak_sweep_{n}_{n_points}x{n_points}_plate_500.csv", 'a')
 
 for H in Hs:
     if last_H is not None and (H < last_H or (np.isclose(H, last_H) and np.isclose(last_Y, np.max(Ys)))):
@@ -37,15 +38,15 @@ for H in Hs:
         if last_H is not None and last_Y is not None and np.isclose(H, last_H) and \
                 (Y < last_Y or np.isclose(Y, last_Y)):
             continue  # Skip already completed positions in the last completed slot.
-        _, X, theta_j, _ = find_slot_peak(W, Y, H, actual_n,
-                                          varied_slot_density_ratio=density_ratio, density_w_thresh=w_thresh,
-                                          centroids=centroids, normals=normals, areas=areas, R_inv=R_inv)
+        _, X, theta, _ = find_slot_peak(W, Y, H, actual_n,
+                                        varied_slot_density_ratio=density_ratio, density_w_thresh=w_thresh,
+                                        centroids=centroids, normals=normals, areas=areas, R_inv=R_inv)
 
         center_x = 0.05
         near_center_vel, _ = bem.get_jet_dir_and_sigma([center_x, Y, 0], centroids, normals, areas, R_inv=R_inv)
         center_grad = np.arctan2(near_center_vel[1], near_center_vel[0]) + np.pi / 2
 
-        save_file.write(f"{H / W},{Y / W},{theta_j},{2 * X / W},{center_grad / center_x}\n")
+        save_file.write(f"{H / W},{Y / W},{theta},{2 * X / W},{center_grad / center_x}\n")
 
         # Make sure the data is saved to disk every time.
         save_file.flush()

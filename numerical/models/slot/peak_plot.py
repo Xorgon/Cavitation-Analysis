@@ -23,7 +23,7 @@ def plot_peak_sweep(h_mat, y_mat, theta_star_mat, x_star_mat, theta_grad_mat,
         theta_star_surf = ax.plot_surface(h_new_mat, y_new_mat, tsm_new, cmap=plt.cm.get_cmap('coolwarm'))
         ax.set_xlabel("$h$")
         ax.set_ylabel("$y$")
-        ax.set_zlabel("$\\theta_j^\\star$")
+        ax.set_zlabel("$\\theta^\\star$ (rad)")
         theta_star_surf.set_clim(np.nanmin(theta_star_mat), np.nanmax(theta_star_mat))
         theta_star_fig.colorbar(theta_star_surf)
 
@@ -33,7 +33,7 @@ def plot_peak_sweep(h_mat, y_mat, theta_star_mat, x_star_mat, theta_grad_mat,
                                               cmap=plt.cm.get_cmap('coolwarm'))
         ax.set_xlabel("$log_{10}(h)$")
         ax.set_ylabel("$log_{10}(y)$")
-        ax.set_zlabel("$log_{10}(\\theta_j^\\star)$")
+        ax.set_zlabel("$log_{10}(\\theta^\\star)$")
         log_theta_star_surf.set_clim(np.nanmin(theta_star_mat), np.nanmax(theta_star_mat))
         log_theta_star_fig.colorbar(log_theta_star_surf)
 
@@ -56,7 +56,7 @@ def plot_peak_sweep(h_mat, y_mat, theta_star_mat, x_star_mat, theta_grad_mat,
         c.set_edgecolor("face")  # Reduce aliasing in output.
     plt.xlabel("$h$", labelpad=0)
     plt.ylabel("$y$")
-    cbar = plt.colorbar(label="$\\theta_j^\\star$", orientation='horizontal')
+    cbar = plt.colorbar(label="$\\theta^\\star$ (rad)", orientation='horizontal')
     cbar.ax.set_xticklabels(cbar.ax.get_xticklabels(), rotation='45')
 
     plt.sca(axes[1])
@@ -97,7 +97,7 @@ def plot_peak_sweep(h_mat, y_mat, theta_star_mat, x_star_mat, theta_grad_mat,
     #     plt.gca().set_xlim(h_range)
     # if y_range is not None:
     #     plt.gca().set_ylim(y_range)
-    # plt.colorbar(label="$\\frac{\\theta_j'(0)}{\\theta_j^\\star/x^\\star}$")
+    # plt.colorbar(label="$\\frac{\\theta'(0)}{\\theta^\\star/x^\\star}$")
     # plt.tight_layout()
     #
     # plt.figure()
@@ -115,7 +115,7 @@ def plot_peak_sweep(h_mat, y_mat, theta_star_mat, x_star_mat, theta_grad_mat,
         plt.yscale('log')
         plt.scatter(y_mat, theta_star_mat, c=h_mat)
         plt.xlabel('$y$')
-        plt.ylabel('$\\theta_j^\\star$')
+        plt.ylabel('$\\theta^\\star$ (rad)')
         plt.colorbar(label="$h$")
 
         plt.figure()
@@ -123,7 +123,7 @@ def plot_peak_sweep(h_mat, y_mat, theta_star_mat, x_star_mat, theta_grad_mat,
         plt.yscale('log')
         plt.scatter(h_mat, theta_star_mat, c=y_mat)
         plt.xlabel('$h$')
-        plt.ylabel('$\\theta_j^\\star$')
+        plt.ylabel('$\\theta^\\star$ (rad)')
         plt.colorbar(label="$y$")
 
         plt.figure()
@@ -148,7 +148,7 @@ def plot_peak_sweep(h_mat, y_mat, theta_star_mat, x_star_mat, theta_grad_mat,
 if __name__ == "__main__":
     n = 20000
     n_points = 16
-    save_file = open(f"model_outputs/peak_sweep_{n}_{n_points}x{n_points}_plate_100.csv", 'r')
+    save_file = open(f"../model_outputs/peak_sweep/peak_sweep_{n}_{n_points}x{n_points}_plate_100.csv", 'r')
 
     all_hs = []
     all_ys = []

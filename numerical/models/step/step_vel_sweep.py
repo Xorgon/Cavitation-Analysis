@@ -8,8 +8,8 @@ import scipy.sparse
 import numerical.bem as bem
 import numerical.util.gen_utils as gen
 
-if not os.path.exists("model_outputs/step_vel_data"):
-    os.makedirs("model_outputs/step_vel_data")
+if not os.path.exists("../model_outputs/step_vel_data"):
+    os.makedirs("../model_outputs/step_vel_data")
 
 offset = 0.05
 H = 2
@@ -32,19 +32,19 @@ length = 100
 centroids, normals, areas = gen.gen_varied_step(n=n, H=H, length=length, depth=50, thresh_dist=thresh_dist,
                                                 density_ratio=density_ratio)
 
-centroids_file = open(f"model_outputs/step_vel_data/centroids_n{n}_H{H:.2f}"
+centroids_file = open(f"../model_outputs/step_vel_data/centroids_n{n}_H{H:.2f}"
                       f"_drat{density_ratio}_thresh{thresh_dist}_len{length}.csv", 'w')
 for c in centroids:
     centroids_file.write(f"{c[0]},{c[1]},{c[2]}\n")
 centroids_file.close()
 
-normals_file = open(f"model_outputs/step_vel_data/normals_n{n}_H{H:.2f}"
+normals_file = open(f"../model_outputs/step_vel_data/normals_n{n}_H{H:.2f}"
                     f"_drat{density_ratio}_thresh{thresh_dist}_len{length}.csv", 'w')
 for normal in normals:
     normals_file.write(f"{normal[0]},{normal[1]},{normal[2]}\n")
 normals_file.close()
 
-output_path = f"model_outputs/step_vel_data/vel_sweep_n{n}_H{H:.2f}" \
+output_path = f"../model_outputs/step_vel_data/vel_sweep_n{n}_H{H:.2f}" \
               f"_drat{density_ratio}_thresh{thresh_dist}_len{length}_N{N}.csv"
 if os.path.exists(output_path):
     print("Output path already exists!")

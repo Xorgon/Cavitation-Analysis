@@ -23,7 +23,7 @@ n = 15000
 density_ratio = 0.25
 thresh_dist = x_lim
 
-out_dir = "model_outputs/exp_comparisons"
+out_dir = "../model_outputs/step/"
 
 centroids, normals, areas = gen.gen_varied_step(n=n, H=H, length=100, depth=50, thresh_dist=thresh_dist * 1.5,
                                                 density_ratio=density_ratio)

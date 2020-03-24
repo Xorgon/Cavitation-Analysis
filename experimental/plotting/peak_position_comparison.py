@@ -12,7 +12,7 @@ from scipy import stats
 
 from experimental.plotting.analyse_slot import SweepData, select_data_series
 import experimental.util.analysis_utils as au
-from numerical.models.slot_opt import find_slot_peak
+from numerical.models.slot.slot_opt import find_slot_peak
 import numerical.util.gen_utils as gen
 import numerical.bem as bem
 from common.util.plotting_utils import initialize_plt

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from common.util.plotting_utils import initialize_plt
-from numerical.models.slot_opt import find_slot_peak
+from numerical.models.slot.slot_opt import find_slot_peak
 
 H = 2
 W = 2
@@ -24,9 +24,9 @@ ax = fig.gca()
 # ax.loglog(qs / w, theta_stars, "k")
 ax.plot(Ys / W, theta_stars, "k")
 ax.set_xlabel("$y$")
-ax.set_ylabel("$\\theta_j^\\star$")
+ax.set_ylabel("$\\theta_j^\\star$ (rad)")
 fig.tight_layout()
-fig.savefig('model_outputs/theta_j_star_y_var.svg')
+fig.savefig('../model_outputs/theta_j_star_y_var.svg')
 
 fig = plt.figure()
 ax = fig.gca()
@@ -34,6 +34,6 @@ ax.plot(Ys / W, x_stars, "k")
 ax.set_xlabel("$y$")
 ax.set_ylabel("$x^\\star$")
 fig.tight_layout()
-fig.savefig('model_outputs/x_star_y_var.svg')
+fig.savefig('../model_outputs/x_star_y_var.svg')
 
 plt.show()

@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 import numerical.util.gen_utils as gen
 import numerical.bem as bem
-from numerical.models.slot_opt import find_slot_peak
+from numerical.models.slot.slot_opt import find_slot_peak
 from experimental.plotting.analyse_slot import SweepData
 
 m_0 = 1

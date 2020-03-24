@@ -37,7 +37,7 @@ for i, Y in enumerate(Ys):
     norm_x_to_plot = np.divide(xs, x_star)
     norm_theta_to_plot = np.divide(thetas, theta_star)
 
-    f_dir = "model_outputs/slot_y_collapse/"
+    f_dir = "../model_outputs/slot_y_collapse/"
     f_name = f"y_collapse_n{n}_Y{Y}.csv"
     if not os.path.exists(f_dir + f_name):
         lists_to_csv(f_dir, f_name, [xs, thetas], ["x", "theta"])

@@ -17,7 +17,7 @@ Y = 2
 normalize = True
 
 m_0 = 1
-n = 2000
+n = 20000
 
 xs = Xs / (0.5 * W)
 
@@ -36,7 +36,7 @@ for i, H in enumerate(Hs):
     vels = bem.get_jet_dirs(points, centroids, normals, areas, m_0, R_inv, verbose=True)
     thetas = np.arctan2(vels[:, 1], vels[:, 0]) + 0.5 * np.pi
 
-    f_dir = "model_outputs/slot_h_collapse/"
+    f_dir = "../model_outputs/slot_h_collapse/"
     f_name = f"h_collapse_n{n}_H{H}.csv"
     if not os.path.exists(f_dir + f_name):
         lists_to_csv(f_dir, f_name, [xs, thetas], ["x", "theta"])

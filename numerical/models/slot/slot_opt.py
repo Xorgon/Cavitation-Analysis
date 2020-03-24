@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     ax2 = fig.add_subplot(312)
     ax2.plot(ns, theta_js, 'k')
-    ax2.set_ylabel("$\\theta_j^\\star$")
+    ax2.set_ylabel("$\\theta_j^\\star$ (rad)")
     ax2.set_xlabel("$N$")
     ax2_conv = ax2.twinx()
     ax2_conv.plot(ns, theta_js_conv, 'k--')

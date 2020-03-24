@@ -54,8 +54,8 @@ for H in Hs:
 
     flat_ds = ds_mat.flatten()
     flat_theta_bs = theta_bs_mat.flatten()
-    os.makedirs("model_outputs/slot_alt_param/", exist_ok=True)
-    file = open(f"model_outputs/slot_alt_param/h_{H}_w_{W}_n_{n}.csv", "w")
+    os.makedirs("../model_outputs/slot_alt_param/", exist_ok=True)
+    file = open(f"../model_outputs/slot_alt_param/h_{H}_w_{W}_n_{n}.csv", "w")
     file.write("d, theta_b, theta_j\n")
     for d, theta_b, theta_j in zip(flat_ds, flat_theta_bs, theta_js):
         file.write(f"{d}, {theta_b}, {theta_j}\n")
