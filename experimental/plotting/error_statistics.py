@@ -41,7 +41,9 @@ plt.subplots_adjust(left=0.1, right=0.98, bottom=0.17, top=0.98, wspace=0.05)
 x_ranges = []
 std_ranges = []
 alph = "abcdefg"
+sweeps = []
 for k, reading_y in enumerate(reading_ys):
+    sweep = SweepData(params.title, reading_y, params.slot_width, params.slot_height)
     # Post-process data to get jet angles.
     res_dict = {}
     for reading in readings:
@@ -73,7 +75,7 @@ for k, reading_y in enumerate(reading_ys):
     std = float(np.mean(stds))
     x = np.linspace(mu - 3 * std, mu + 3 * std, 100)
 
-    print(f"q = {reading_y - y_offset}, Mean = {mu}, Standard deviation = {std}")
+    print(f"m_y = {reading_y}, Mean = {mu}, Standard deviation = {std}")
 
     ax = axes[k]
     ax.hist(adjusted_theta_js, 100, density=True, histtype='stepfilled', color="gray")
@@ -88,7 +90,7 @@ for k, reading_y in enumerate(reading_ys):
     ax.set_xlim([-0.075, 0.075])
     x_ranges.append(xs)
     std_ranges.append(stds)
-    ax.annotate(f'${alph[k]})$', xy=(0, 0), xytext=(0.02, 0.98), textcoords='axes fraction',
+    ax.annotate(f'$({alph[k]})$', xy=(0, 0), xytext=(0.02, 0.98), textcoords='axes fraction',
                 horizontalalignment='left',
                 verticalalignment='top')
 plt.show()
