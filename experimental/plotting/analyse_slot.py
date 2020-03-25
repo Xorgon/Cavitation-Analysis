@@ -9,10 +9,10 @@ import numpy as np
 from scipy import stats
 from sklearn.metrics import r2_score
 
-import experimental.util.analysis_utils as au
 import common.util.file_utils as file
-import experimental.util.config_utils as cu
 import common.util.plotting_utils as plt_util
+import experimental.util.analysis_utils as au
+import experimental.util.config_utils as cu
 
 
 class SweepData:
@@ -26,52 +26,55 @@ class SweepData:
     H = None  # Slot height
     m_xs = None  # Measured x values.
     xs = None  # Calculated x values.
-    theta_js = None  # Calculated theta_j values.
+    thetas = None  # Calculated theta values.
     is_shifted = False  # Whether the data has been shifted to correct for offset
     Ys = None  # Calculated y values.
 
-    def __init__(self, geometry_label, y, w, h):
+    def __init__(self, geometry_label, m_y, W, H):
         self.geometry_label = geometry_label
-        self.m_y = y
-        self.W = w
-        self.H = h
+        self.m_y = m_y
+        self.W = W
+        self.H = H
         self.m_xs = []
         self.xs = []
-        self.theta_js = []
+        self.thetas = []
         self.Ys = []
 
     def __str__(self):
         return f"{self.geometry_label}: y={self.m_y}, q={np.mean(self.Ys):.2f}"
 
-    def add_point(self, X, x, theta_j, q):
+    def add_point(self, X, x, theta, Y):
         """ Adds a data point to the sweep. """
         self.m_xs.append(X)
         self.xs.append(x)
-        self.theta_js.append(theta_j)
-        self.Ys.append(q)
+        self.thetas.append(theta)
+        self.Ys.append(Y)
 
     def get_grouped_data(self):
         """ Groups data based on x position. """
         m_xs_set = set(self.m_xs)
         m_xs_xs = []
-        m_xs_theta_js = []
+        m_xs_thetas = []
         for m_x in m_xs_set:
-            xs, theta_js = zip(*[(x, theta_j) for res_x, x, theta_j
-                                 in zip(self.m_xs, self.xs, self.theta_js)
-                                 if res_x == m_x])
+            xs, thetas = zip(*[(x, theta) for res_x, x, theta
+                               in zip(self.m_xs, self.xs, self.thetas)
+                               if res_x == m_x])
             m_xs_xs.append(xs)
-            m_xs_theta_js.append(theta_js)
-        return m_xs_set, np.array(m_xs_xs), np.array(m_xs_theta_js)
+            m_xs_thetas.append(thetas)
+        m_xs_set, m_xs_xs, m_xs_thetas = zip(*sorted(zip(m_xs_set, m_xs_xs, m_xs_thetas)))
+        return m_xs_set, np.array(m_xs_xs), np.array(m_xs_thetas)
 
     def get_mean_data(self):
         """ Computes the mean data for each group from :func:`SweepData.get_grouped_data`. """
-        m_xs_set, xs_groups, theta_j_groups = self.get_grouped_data()
+        m_xs_set, xs_groups, theta_groups = self.get_grouped_data()
         mean_xs = []
-        mean_theta_js = []
-        for xs, theta_js in zip(xs_groups, theta_j_groups):
+        mean_thetas = []
+        n_thetas = []
+        for xs, thetas in zip(xs_groups, theta_groups):
             mean_xs.append(np.mean(xs))
-            mean_theta_js.append(np.mean(theta_js))
-        return m_xs_set, mean_xs, mean_theta_js
+            mean_thetas.append(np.mean(thetas))
+            n_thetas.append(len(thetas))
+        return m_xs_set, mean_xs, mean_thetas, n_thetas
 
     def get_curve_fits(self, range_fact=1.5, std=0.015085955056793596):
         """
@@ -80,131 +83,54 @@ class SweepData:
         coefficients.
         :param range_fact: How far beyond the highest mean value to use for peak fitting.
         :param std: Standard deviation for data set.
-        :returns: (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_std_theta_j),
-                 (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_std_theta_j)
+        :returns: (max_peak_x, max_peak_theta, max_poly_coeffs, max_std_theta),
+                 (min_peak_x, min_peak_theta, min_poly_coeffs, min_std_theta)
         """
-        _, mean_xs, mean_theta_js = self.get_mean_data()
-        srtd_mean_xs, srtd_mean_theta_js = zip(*sorted(zip(mean_xs, mean_theta_js),
-                                                       key=lambda k: k[1]))  # Sorted by theta_j
+        _, mean_xs, mean_thetas, n_thetas = self.get_mean_data()
+        srtd_mean_xs, srtd_mean_thetas = zip(*sorted(zip(mean_xs, mean_thetas),
+                                                     key=lambda k: k[1]))  # Sorted by theta
         max_peak_x = srtd_mean_xs[-1]
         min_peak_x = srtd_mean_xs[0]
 
         x_range = range_fact * (max_peak_x - min_peak_x) / 2
-
-        max_xs, max_theta_js = zip(*[(x, theta_j) for x, theta_j in zip(mean_xs, mean_theta_js)
-                                     if 0 < x < x_range])
-        max_weights = [1 / std ** 2] * len(max_xs)
-        max_poly_coeffs, max_cov = np.polyfit(max_xs, max_theta_js, 2, cov='unscaled', w=max_weights)
-        max_peak_theta_j = - max_poly_coeffs[1] ** 2 / (4 * max_poly_coeffs[0]) + max_poly_coeffs[2]  # -b^2 / (4a) + c
+        max_xs, max_thetas = zip(*[(x, theta)
+                                   for x, theta in zip(self.xs, self.thetas)
+                                   if 0 < x < x_range])
+        max_weights = [std ** -2] * len(max_xs)
+        max_poly_coeffs, max_cov = np.polyfit(max_xs, max_thetas, 2, cov='unscaled', w=max_weights)
+        max_peak_theta = - max_poly_coeffs[1] ** 2 / (4 * max_poly_coeffs[0]) + max_poly_coeffs[2]  # -b^2 / (4a) + c
         max_peak_x = - max_poly_coeffs[1] / (2 * max_poly_coeffs[0])  # -b / (2a)
 
-        a, b, c = max_poly_coeffs
-        s_a, s_b, s_c = max_cov.diagonal()
-        max_std_theta_j = 3 * std / len(max_xs)  # M * std / N
-
-        min_xs, min_theta_js = zip(*[(x, theta_j) for x, theta_j in zip(mean_xs, mean_theta_js)
-                                     if - x_range < x < 0])
-        min_weights = [1 / std ** 2] * len(min_xs)
-        min_poly_coeffs, min_cov = np.polyfit(min_xs, min_theta_js, 2, cov='unscaled', w=min_weights)
-        min_peak_theta_j = - min_poly_coeffs[1] ** 2 / (4 * min_poly_coeffs[0]) + min_poly_coeffs[2]  # -b^2 / (4a) + c
+        min_xs, min_thetas = zip(*[(x, theta)
+                                   for x, theta in zip(self.xs, self.thetas)
+                                   if - x_range < x < 0])
+        min_weights = [std ** -2] * len(min_xs)
+        min_poly_coeffs, min_cov = np.polyfit(min_xs, min_thetas, 2, cov='unscaled', w=min_weights)
+        min_peak_theta = - min_poly_coeffs[1] ** 2 / (4 * min_poly_coeffs[0]) + min_poly_coeffs[2]  # -b^2 / (4a) + c
         min_peak_x = - min_poly_coeffs[1] / (2 * min_poly_coeffs[0])
 
-        a, b, c = max_poly_coeffs
-        s_a, s_b, s_c = max_cov.diagonal()
-        min_std_theta_j = 3 * std / len(min_xs)  # M * std / N
+        combined_tj_std = std * np.sqrt(2 / (len(max_xs) + len(min_xs)))
 
-        return (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_std_theta_j), \
-               (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_std_theta_j)
+        return (max_peak_x, max_peak_theta, max_poly_coeffs), \
+               (min_peak_x, min_peak_theta, min_poly_coeffs), \
+               combined_tj_std, len(max_xs) + len(min_xs)
 
-    def get_curve_fits_cubic(self, range_fact=1.5, std=0.015085955056793596):
-        """
-        Computes and returns curve fits for the two peaks of a sweep. Returns two tuples, one each for the maximum and
-        minimum peaks. Each tuple contains the position of the peak, value at the peak, and curve fit polynomial
-        coefficients.
-        :param range_fact: How far beyond the highest mean value to use for peak fitting.
-        :param std: Standard deviation for data set.
-        :returns: (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_std_theta_j),
-                 (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_std_theta_j)
-        """
-        _, mean_xs, mean_theta_js = self.get_mean_data()
-        srtd_mean_xs, srtd_mean_theta_js = zip(*sorted(zip(mean_xs, mean_theta_js),
-                                                       key=lambda k: k[1]))  # Sorted by theta_j
-        max_peak_x = srtd_mean_xs[-1]
-        min_peak_x = srtd_mean_xs[0]
-
-        x_range = range_fact * (max_peak_x - min_peak_x) / 2
-
-        ################
-        # Maximum peak #
-        ################
-        max_xs, max_theta_js = zip(*[(x, theta_j) for x, theta_j in zip(mean_xs, mean_theta_js)
-                                     if 0 < x < x_range])
-        max_weights = [1 / std ** 2] * len(max_xs)
-        max_poly_coeffs, max_cov = np.polyfit(max_xs, max_theta_js, 3, cov='unscaled', w=max_weights)
-
-        a, b, c, d = max_poly_coeffs
-        if 4 * b ** 2 - 12 * a * c < 0:
-            raise ValueError("Invalid curve fit.")  # TODO: Handle this better.
-        max_peak_x_pos = (-2 * b + np.sqrt(4 * b ** 2 - 12 * a * c)) / (6 * a)
-        pos_deriv = 6 * a * max_peak_x_pos + 2 * b
-
-        max_peak_x_neg = (-2 * b - np.sqrt(4 * b ** 2 - 12 * a * c)) / (6 * a)
-        neg_deriv = 6 * a * max_peak_x_neg + 2 * b
-
-        if pos_deriv <= 0:
-            max_peak_x = max_peak_x_pos
-        elif neg_deriv <= 0:
-            max_peak_x = max_peak_x_neg
-        else:
-            raise ValueError("Invalid curve fit.")
-        max_peak_theta_j = np.polyval(max_poly_coeffs, max_peak_x)
-        max_std_theta_j = 4 * std / len(max_xs)  # M * std / N
-
-        ################
-        # Minimum peak #
-        ################
-        min_xs, min_theta_js = zip(*[(x, theta_j) for x, theta_j in zip(mean_xs, mean_theta_js)
-                                     if -x_range < x < 0])
-        min_weights = [1 / std ** 2] * len(min_xs)
-        min_poly_coeffs, min_cov = np.polyfit(min_xs, min_theta_js, 3, cov='unscaled', w=min_weights)
-
-        a, b, c, d = min_poly_coeffs
-        if 4 * b ** 2 - 12 * a * c < 0:
-            raise ValueError("Invalid curve fit.")  # TODO: Handle this better.
-        min_peak_x_pos = (-2 * b + np.sqrt(4 * b ** 2 - 12 * a * c)) / (6 * a)
-        pos_deriv = 6 * a * min_peak_x_pos + 2 * b
-
-        min_peak_x_neg = (-2 * b - np.sqrt(4 * b ** 2 - 12 * a * c)) / (6 * a)
-        neg_deriv = 6 * a * min_peak_x_neg + 2 * b
-
-        if pos_deriv >= 0:
-            min_peak_x = min_peak_x_pos
-        elif neg_deriv >= 0:
-            min_peak_x = min_peak_x_neg
-        else:
-            raise ValueError("Invalid curve fit.")
-        min_peak_theta_j = np.polyval(min_poly_coeffs, min_peak_x)
-        min_std_theta_j = 4 * std / len(min_xs)  # M * std / N
-
-        return (max_peak_x, max_peak_theta_j, max_poly_coeffs, max_std_theta_j), \
-               (min_peak_x, min_peak_theta_j, min_poly_coeffs, min_std_theta_j)
-
-    def check_curve_fits(self, max_peak_x, max_peak_theta_j, max_poly_coeffs,
-                         min_peak_x, min_peak_theta_j, min_poly_coeffs,
-                         range_fact=1.5, verbose=False):  # TODO: Use range_fact rather than x_range
+    def check_curve_fits(self, max_peak_x, max_peak_theta, max_poly_coeffs,
+                         min_peak_x, min_peak_theta, min_poly_coeffs,
+                         range_fact=1.5, verbose=False):
         """
         Shifts the data contained in SweepData based on the curve fit peaks supplied.
         :param max_peak_x: x position of maximum peak.
-        :param max_peak_theta_j: theta_j value at maximum peak.
+        :param max_peak_theta: theta value at maximum peak.
         :param max_poly_coeffs: polynomial coefficients for the maximum peak fit.
         :param min_peak_x: x position of minimum peak.
-        :param min_peak_theta_j: theta_j value at miminum peak.
+        :param min_peak_theta: theta value at minimum peak.
         :param min_poly_coeffs: polynomial coefficients for the minimum peak fit.
         :param range_fact: How far beyond the highest mean value to use for peak fitting.
         :param verbose: debug outputs.
         :return:
         """
-        theta_j_offset = (max_peak_theta_j + min_peak_theta_j) / 2
+        theta_offset = (max_peak_theta + min_peak_theta) / 2
         x_star = (max_peak_x - min_peak_x) / 2
         x_offset = (max_peak_x + min_peak_x) / 2
 
@@ -215,39 +141,39 @@ class SweepData:
             return False
 
         shifted_x = self.xs if self.is_shifted else np.subtract(self.xs, x_offset)
-        shifted_theta_j = self.theta_js if self.is_shifted else np.subtract(self.theta_js, theta_j_offset)
+        shifted_theta = self.thetas if self.is_shifted else np.subtract(self.thetas, theta_offset)
 
-        r2_max_to_max = r2_score([theta_j for x, theta_j in zip(shifted_x, shifted_theta_j) if
+        r2_max_to_max = r2_score([theta for x, theta in zip(shifted_x, shifted_theta) if
                                   0 < x < x_range],
                                  np.subtract(np.polyval(max_poly_coeffs,
                                                         [x for x in shifted_x if
                                                          0 < x < x_range]),
-                                             theta_j_offset),
+                                             theta_offset),
                                  multioutput='uniform_average')
 
-        r2_min_to_min = r2_score([theta_j for x, theta_j in zip(shifted_x, shifted_theta_j) if
+        r2_min_to_min = r2_score([theta for x, theta in zip(shifted_x, shifted_theta) if
                                   - x_range < x < 0],
                                  np.subtract(np.polyval(min_poly_coeffs,
                                                         [x for x in shifted_x if
                                                          - x_range < x < 0]),
-                                             theta_j_offset),
+                                             theta_offset),
                                  multioutput='uniform_average')
 
-        r2_min_to_max = r2_score([theta_j for x, theta_j in zip(shifted_x, shifted_theta_j) if
+        r2_min_to_max = r2_score([theta for x, theta in zip(shifted_x, shifted_theta) if
                                   0 < x < x_range],
                                  # Minimum curve fit reflected
                                  -np.subtract(np.polyval(min_poly_coeffs,
                                                          [-x for x in shifted_x if
                                                           0 < x < x_range]),
-                                              theta_j_offset),
+                                              theta_offset),
                                  multioutput='uniform_average')
-        r2_max_to_min = r2_score([theta_j for x, theta_j in zip(shifted_x, shifted_theta_j) if
+        r2_max_to_min = r2_score([theta for x, theta in zip(shifted_x, shifted_theta) if
                                   - x_range < x < 0],
                                  # Maximum curve fit reflected
                                  -np.subtract(np.polyval(max_poly_coeffs,
                                                          [-x for x in shifted_x if
                                                           - x_range < x < 0]),
-                                              theta_j_offset),
+                                              theta_offset),
                                  multioutput='uniform_average')
 
         if verbose:
@@ -265,38 +191,38 @@ class SweepData:
 
         return True
 
-    def shift_data(self, max_peak_x, max_peak_theta_j, min_peak_x, min_peak_theta_j, keep_shifted=True):
+    def shift_data(self, max_peak_x, max_peak_theta, min_peak_x, min_peak_theta, keep_shifted=True):
         """
         Shifts the data contained in SweepData based on the curve fit peaks supplied.
         :param max_peak_x: x position of maximum peak.
-        :param max_peak_theta_j: theta_j value at maximum peak.
+        :param max_peak_theta: theta value at maximum peak.
         :param min_peak_x: x position of minimum peak.
-        :param min_peak_theta_j: theta_j value at miminum peak.
+        :param min_peak_theta: theta value at miminum peak.
         :param keep_shifted: whether to keep the shifted data rather than the original data.
         :return:
         """
-        theta_j_max = (max_peak_theta_j - min_peak_theta_j) / 2
-        theta_j_offset = (max_peak_theta_j + min_peak_theta_j) / 2
+        theta_max = (max_peak_theta - min_peak_theta) / 2
+        theta_offset = (max_peak_theta + min_peak_theta) / 2
         x_star = (max_peak_x - min_peak_x) / 2
         x_offset = (max_peak_x + min_peak_x) / 2
 
         # Correct the offset
         if keep_shifted:
-            self.theta_js = np.subtract(self.theta_js, theta_j_offset)
+            self.thetas = np.subtract(self.thetas, theta_offset)
             self.xs = np.subtract(self.xs, x_offset)
             self.is_shifted = True
 
-        return x_star, x_offset, theta_j_max, theta_j_offset
+        return x_star, x_offset, theta_max, theta_offset
 
     def get_error_bars(self, confidence_interval, std):
         """ Computes error bar values for each group from :func:`SweepData.get_grouped_data`. """
-        _, x_groups, theta_j_groups = self.get_grouped_data()
+        _, x_groups, theta_groups = self.get_grouped_data()
         errors = []
-        for xs, theta_js in zip(x_groups, theta_j_groups):
+        for xs, thetas in zip(x_groups, theta_groups):
             # https://stackoverflow.com/a/28243282/5270376
-            interval = stats.norm.interval(confidence_interval, loc=np.mean(theta_js),
+            interval = stats.norm.interval(confidence_interval, loc=np.mean(thetas),
                                            scale=std / math.sqrt(len(xs)))
-            errors.append(interval[1] - np.mean(theta_js))
+            errors.append(interval[1] - np.mean(thetas))
         return errors
 
 
@@ -324,15 +250,15 @@ def select_data_series(use_all_dirs=True, num_series=None, use_defaults=True, ve
 
 def plot_prediction_file(prediction_file, ax, normalize=False, x_star=None, theta_star=None, label="Numerical", c='k'):
     x_min, x_max = ax.get_xlim()  # Keep track of original x limits.
-    predicted_xs, predicted_theta_js = file.csv_to_lists("", prediction_file, has_headers=True)
+    predicted_xs, predicted_thetas = file.csv_to_lists("", prediction_file, has_headers=True)
     if x_star is None or theta_star is None:
-        x_star, theta_star = sorted(zip(predicted_xs, predicted_theta_js), key=lambda k: k[1])[-1]
+        x_star, theta_star = sorted(zip(predicted_xs, predicted_thetas), key=lambda k: k[1])[-1]
     if normalize:
         predicted_xs = np.divide(predicted_xs, x_star)
-        predicted_theta_js = np.divide(predicted_theta_js, theta_star)
+        predicted_thetas = np.divide(predicted_thetas, theta_star)
     ax.plot([x for x in predicted_xs if x_min < x < x_max],
-            [theta_j for x, theta_j in zip(predicted_xs, predicted_theta_js) if x_min < x < x_max],
-            color=c, label=label, zorder=9001)
+            [theta for x, theta in zip(predicted_xs, predicted_thetas) if x_min < x < x_max],
+            color=c, label=label, zorder=9001, linewidth=1)
     ax.set_xlim((x_min, x_max))  # Reset x limits to their original values.
 
 
@@ -355,7 +281,8 @@ def plot_prediction_files(prediction_files, ax, normalize=False, coloured_lines=
     ax.set_xlim((x_min, x_max))  # Reset x limits to their original values.
 
 
-def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, config=None, num_series=None):
+def analyse_slot(ax, sweeps=None, set_y_label=True, set_x_label=True, use_defaults=False,
+                 config=None, num_series=None):
     create_window = not mpl.get_backend() == "Qt5Agg"
     default_config = {
         "use_all_series": True,
@@ -384,7 +311,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
 
     use_all_series = config["use_all_series"]  # Use all reading_y values for selected data sets.
     use_all_dirs = config["use_all_dirs"]  # Use all directories that contain params.py.
-    normalize = config["normalize"]  # Normalize the plot (theta_j = theta_j*, x = x / x*).
+    normalize = config["normalize"]  # Normalize the plot (theta = theta*, x = x / x*).
     plot_fits = config["plot_fits"]  # Plot the fitted peaks.
     skip_bad_data = config["skip_bad_data"]  # Do not plot data sets that have bad data detected.
     plot_means = config["plot_means"]  # Plot a line through all of the means.
@@ -399,60 +326,76 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     confidence_interval = 0.99  # Set the confidence interval for the error bars.
     std = 0.015085955056793596  # Set the standard deviation for the error bars (from error_statistics.py).
 
+    sweep_save_dir = "../../experimental/plotting/sweeps/"
+
     prediction_file_dir = "../../numerical/models/model_outputs/exp_comparisons/"
     prediction_files = []
     if plot_predicted:
         prediction_files = file.select_multiple_files(prediction_file_dir, create_window=create_window)
 
-    dirs = select_data_series(use_all_dirs, num_series, use_defaults, verbose, create_window)
+    if sweeps is None:
+        dirs = select_data_series(use_all_dirs, num_series, use_defaults, verbose, create_window)
 
-    sweeps = []
-    for dir_path in dirs:
-        sys.path.append(dir_path)
-        import params
-        importlib.reload(params)
-        sys.path.remove(dir_path)
+        ###################
+        # Processing Data #
+        ###################
+        sweeps = []
+        for i, dir_path in enumerate(dirs):
+            sys.path.append(dir_path)
+            import params
+            importlib.reload(params)
+            sys.path.remove(dir_path)
 
-        x_offset = params.left_slot_wall_x + params.slot_width / 2
-        y_offset = params.upper_surface_y
+            x_offset = params.left_slot_wall_x + params.slot_width / 2
+            y_offset = params.upper_surface_y
 
-        if os.path.exists(dir_path + "invalid_readings.txt") and os.path.exists(dir_path + "readings_dump.csv"):
-            au.flag_invalid_readings(dir_path)
-        readings = au.load_readings(dir_path + "readings_dump.csv")
-        readings = sorted(readings, key=lambda r: r.m_x)
+            if os.path.exists(dir_path + "invalid_readings.txt") and os.path.exists(dir_path + "readings_dump.csv"):
+                au.flag_invalid_readings(dir_path)
+            readings = au.load_readings(dir_path + "readings_dump.csv")
+            readings = sorted(readings, key=lambda r: r.m_x)
 
-        # Select y values to use
-        available_ys = set([reading.m_y for reading in readings])
-        if use_all_series:
-            reading_ys = available_ys
-        else:
-            reading_ys = []
-            ys_config_dict = {}
-            for this_y in sorted(available_ys):
-                ys_config_dict[str(this_y)] = False
-            ys_config_dict = cu.get_config(ys_config_dict, create_window=False)
-            for key in ys_config_dict.keys():
-                if ys_config_dict[key]:
-                    reading_ys.append(float(key))
-
-        for reading_y in reading_ys:
-            if hasattr(params, 'title'):
-                label = f"{params.title}"
+            # Select y values to use
+            available_ys = set([reading.m_y for reading in readings])
+            if use_all_series:
+                reading_ys = available_ys
             else:
-                label = f"{dir_path}"
+                reading_ys = []
+                ys_config_dict = {}
+                for this_y in sorted(available_ys):
+                    ys_config_dict[str(this_y)] = False
+                ys_config_dict = cu.get_config(ys_config_dict, create_window=False)
+                for key in ys_config_dict.keys():
+                    if ys_config_dict[key]:
+                        reading_ys.append(float(key))
 
-            sweep_data = SweepData(label, reading_y, params.slot_width, params.slot_height)
-            sweep_readings = [reading for reading in readings if reading.m_y == reading_y]
-            # Post-process data to get jet angles.
-            for reading in sweep_readings:
-                theta_j = math.atan2(-reading.disp_vect[1], reading.disp_vect[0]) + math.pi / 2
-                pos_mm = reading.get_bubble_pos_mm(params.mm_per_px)
-                x = (pos_mm[0] - x_offset) / (0.5 * params.slot_width)
-                Y = pos_mm[1] - y_offset
-                sweep_data.add_point(reading.m_x, x, theta_j, Y)
-            if np.mean(sweep_data.Ys) < 0:
-                continue  # Ignore bubbles generated inside the slot.
-            sweeps.append(sweep_data)
+            for reading_y in reading_ys:
+                if hasattr(params, 'title'):
+                    label = f"{params.title}"
+                else:
+                    label = f"{dir_path}"
+
+                sweep_data = SweepData(label, reading_y, params.slot_width, params.slot_height)
+                sweep_readings = [reading for reading in readings if reading.m_y == reading_y]
+                # Post-process data to get jet angles.
+                for reading in sweep_readings:
+                    theta = math.atan2(-reading.disp_vect[1], reading.disp_vect[0]) + math.pi / 2
+                    pos_mm = reading.get_bubble_pos_mm(params.mm_per_px)
+                    x = (pos_mm[0] - x_offset) / (0.5 * params.slot_width)
+                    Y = pos_mm[1] - y_offset
+                    sweep_data.add_point(reading.m_x, x, theta, Y)
+                if np.mean(sweep_data.Ys) < 0:
+                    continue  # Ignore bubbles generated inside the slot.
+                sweeps.append(sweep_data)
+                _, mean_xs, mean_thetas, _ = sweep_data.get_mean_data()
+                errors = sweep_data.get_error_bars(confidence_interval, std)
+                file.lists_to_csv(sweep_save_dir + "all_data/",
+                                  f"all_data_sweep_{sweep_data.geometry_label}_Y{np.mean(sweep_data.Ys):.2f}.csv",
+                                  [sweep_data.xs, sweep_data.thetas],
+                                  headers=["x", "theta"])
+                file.lists_to_csv(sweep_save_dir + "mean_data/",
+                                  f"mean_sweep_{sweep_data.geometry_label}_Y{np.mean(sweep_data.Ys):.2f}.csv",
+                                  [mean_xs, mean_thetas, errors],
+                                  headers=["mean x", "mean theta", "99% confidence interval"])
 
     num_rejected_sets = 0
     print(f"Found {len(sweeps)} sweeps")
@@ -462,10 +405,14 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     markers = [".", "v", "s", "x", "^", "+", "D", "1", "*", "P", "X", "4", "2", "<", "3", ">", "H", "o", "p", "|"]
     if len(markers) < len(sweeps):
         raise ValueError("Too few markers are available for the data sets.")
+
+    #######################
+    # Plotting Sweep Data #
+    #######################
     for i, sweep in enumerate(sorted(sweeps, key=lambda j: (j.geometry_label, j.m_y))):
         is_bad_data = False
 
-        m_x_set, mean_xs, means = sweep.get_mean_data()
+        m_x_set, mean_xs, means, _ = sweep.get_mean_data()
         y_errs = sweep.get_error_bars(confidence_interval, std)
 
         sorted_mean_xs = sorted(zip(mean_xs, means), key=lambda k: k[1])
@@ -474,24 +421,25 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
 
         range_fact = 1.5
 
-        (max_fitted_peak_p, max_fitted_peak, max_poly_coeffs, _), \
-        (min_fitted_peak_p, min_fitted_peak, min_poly_coeffs, _) \
+        (max_fitted_peak_p, max_fitted_peak, max_poly_coeffs), \
+        (min_fitted_peak_p, min_fitted_peak, min_poly_coeffs), \
+        _, _ \
             = sweep.get_curve_fits(range_fact)
 
         is_bad_data = not sweep.check_curve_fits(max_fitted_peak_p, max_fitted_peak, max_poly_coeffs,
                                                  min_fitted_peak_p, min_fitted_peak, min_poly_coeffs,
                                                  range_fact, verbose) or is_bad_data
 
-        x_star, x_offset, theta_star, theta_j_offset = sweep.shift_data(max_fitted_peak_p,
-                                                                        max_fitted_peak,
-                                                                        min_fitted_peak_p,
-                                                                        min_fitted_peak,
-                                                                        keep_shifted=do_shift)
-        m_x_set, mean_xs, means = sweep.get_mean_data()
+        x_star, x_offset, theta_star, theta_offset = sweep.shift_data(max_fitted_peak_p,
+                                                                      max_fitted_peak,
+                                                                      min_fitted_peak_p,
+                                                                      min_fitted_peak,
+                                                                      keep_shifted=do_shift)
+        m_x_set, mean_xs, means, _ = sweep.get_mean_data()
 
-        if abs(theta_j_offset) > 0.05:  # Any larger than this would mean very noticeable tilt of the frame.
+        if abs(theta_offset) > 0.05:  # Any larger than this would mean very noticeable tilt of the frame.
             print(f"WARNING: Large jet angle offset detected on {sweep.geometry_label}:{sweep.m_y}."
-                  f" Y={np.mean(sweep.Ys)}, theta_j_offset={theta_j_offset:.5f}")
+                  f" Y={np.mean(sweep.Ys)}, theta_offset={theta_offset:.5f}")
             is_bad_data = True
 
         Y = np.mean(sweep.Ys)
@@ -501,14 +449,14 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
                   f"    Max peak = {max_fitted_peak:.4f} (at x={max_fitted_peak_p:.4f})\n"
                   f"    Min peak = {min_fitted_peak:.4f} (at x={min_fitted_peak_p:.4f})\n"
                   f"    Average peak = {theta_star:.4f} (at x={x_star:.4f})\n"
-                  f"    Offset = {theta_j_offset:.4f} (x_offset={x_offset:.4f})")
+                  f"    Offset = {theta_offset:.4f} (x_offset={x_offset:.4f})")
 
         # Curve fit plot data
         x_range = range_fact * (max_peak_x - min_peak_x) / 2
         max_fit_xs = np.linspace(0, x_range, 100)
         max_fit_ys = np.polyval(max_poly_coeffs, max_fit_xs)
         shifted_max_fit_xs = np.subtract(max_fit_xs, x_offset)
-        shifted_max_fit_ys = np.subtract(max_fit_ys, theta_j_offset)
+        shifted_max_fit_ys = np.subtract(max_fit_ys, theta_offset)
         if do_shift:
             max_fit_xs = shifted_max_fit_xs
             max_fit_ys = shifted_max_fit_ys
@@ -516,13 +464,13 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         min_fit_xs = np.linspace(-x_range, 0, 100)
         min_fit_ys = np.polyval(min_poly_coeffs, min_fit_xs)
         shifted_min_fit_xs = np.subtract(min_fit_xs, x_offset)
-        shifted_min_fit_ys = np.subtract(min_fit_ys, theta_j_offset)
+        shifted_min_fit_ys = np.subtract(min_fit_ys, theta_offset)
         if do_shift:
             min_fit_xs = shifted_min_fit_xs
             min_fit_ys = shifted_min_fit_ys
 
         if normalize:
-            sweep.theta_js = np.divide(sweep.theta_js, theta_star)
+            sweep.thetas = np.divide(sweep.thetas, theta_star)
             max_fit_ys = np.divide(max_fit_ys, theta_star)
             min_fit_ys = np.divide(min_fit_ys, theta_star)
             y_errs = np.divide(y_errs, theta_star)
@@ -541,8 +489,8 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
 
         # Plot the data
         if plot_fits:
-            ax.plot(max_fit_xs, max_fit_ys, color="r")
-            ax.plot(min_fit_xs, min_fit_ys, color="r")
+            ax.plot(max_fit_xs, max_fit_ys, color="C1")
+            ax.plot(min_fit_xs, min_fit_ys, color="C1")
         if plot_means:
             ax.plot(mean_xs, means, color="g")
         marker = markers.pop(0)
@@ -565,7 +513,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
                 ax.errorbar(mean_xs, means, yerr=y_errs, fmt=marker, label=legend_label, color=c,
                             zorder=zorder)
             else:
-                ax.scatter(sweep.xs, sweep.theta_js, c, marker=marker, label=legend_label, zorder=zorder)
+                ax.scatter(sweep.xs, sweep.thetas, color=c, marker=marker, label=legend_label, zorder=zorder)
         else:
             c = 'k' if not colours else c
             zorder = Y
@@ -577,17 +525,24 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
                 if verbose:
                     print(f"{sweep.geometry_label}:{sweep.m_y}, Mean Y = {Y:.3f}\n")
             else:
-                ax.scatter(sweep.xs, sweep.theta_js, marker=marker, color=c, zorder=zorder)
+                ax.scatter(sweep.xs, sweep.thetas, marker=marker, color=c, zorder=zorder)
                 if verbose:
                     print(f"{sweep.geometry_label}:{sweep.m_y}, Mean Y = {Y:.3f}\n")
         if len(sweeps) == len(prediction_files):
             label = None
             if len(sweeps) == 1:
                 label = "Numerical"
+                n_c = "C1"
+            else:
+                n_c = c
             plot_prediction_file(prediction_files[i], ax, normalize, x_star=x_star, theta_star=theta_star, label=label,
-                                 c=c)
+                                 c=n_c)
 
     print(f"Number of rejected data sets = {num_rejected_sets}")
+
+    #########################
+    # General plot features #
+    #########################
 
     # Plot predictions.
     if plot_predicted and len(sweeps) != len(prediction_files):
@@ -603,7 +558,7 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
         if set_x_label:
             ax.set_xlabel("$x$", labelpad=0)
         if set_y_label:
-            ax.set_ylabel("$\\theta_j$", labelpad=-5)
+            ax.set_ylabel("$\\theta$ (rad)", labelpad=-5)
 
     # Create legend.
     if labelled:
@@ -620,13 +575,15 @@ def analyse_slot(ax, set_y_label=True, set_x_label=True, use_defaults=False, con
     if y_max is not None:
         ax.set_ylim(-y_max, y_max)
 
+    return ax
+
 
 if __name__ == "__main__":
     font_size = 10
-    plt_util.initialize_plt(font_size=font_size, capsize=3)
+    plt_util.initialize_plt(font_size=font_size, capsize=2, line_scale=0.5)
 
-    fig_width = 5.31445
-    fig_height = 5.31445 * 2 / 3
+    fig_width = 0.75 * 5.31445
+    fig_height = fig_width * 2 / 3
     left_padding = 0.4 + font_size / 35
     right_padding = 0.08
     top_padding = 0.08
@@ -644,5 +601,8 @@ if __name__ == "__main__":
                         hspace=v_spacing / ax_width)
     this_ax = this_fig.gca()
     this_ax = analyse_slot(this_ax)
+    # exp_line = mlines.Line2D([], [], color="black", linestyle=" ", marker=".", label='Experimental')
+    # pred_line = mlines.Line2D([], [], color="C1", label='Numerical', linewidth=1)
+    # this_ax.legend(handles=[exp_line, pred_line], frameon=False, loc='lower left')
     # plt.tight_layout()
     plt.show()
