@@ -227,6 +227,15 @@ class SweepData:
 
 
 def select_data_series(use_all_dirs=True, num_series=None, use_defaults=True, verbose=False, create_window=True):
+    """
+    Select a series of data using a GUI.
+    :param use_all_dirs: Select all directories within a parent directory.
+    :param num_series: The number of series to select (only used if use_all_dirs is false).
+    :param use_defaults: Just select the default directory (essentially a legacy feature).
+    :param verbose: Output debug information.
+    :param create_window: Whether PyQt5 creates a window (for odd conflicts with Matplotlib).
+    :return: Array of directory paths.
+    """
     dirs = []
     if use_all_dirs:
         if use_defaults:
@@ -249,6 +258,16 @@ def select_data_series(use_all_dirs=True, num_series=None, use_defaults=True, ve
 
 
 def plot_prediction_file(prediction_file, ax, normalize=False, x_star=None, theta_star=None, label="Numerical", c='k'):
+    """
+    Plot a prediction file on a given axes.
+    :param prediction_file: Full prediction file path.
+    :param ax: Axes to plot on.
+    :param normalize: Whether to normalize the data or not.
+    :param x_star: Option to specify an x_star value.
+    :param theta_star: Option to specify a theta_star value.
+    :param label: The legend label for this line.
+    :param c: The colour of this line.
+    """
     x_min, x_max = ax.get_xlim()  # Keep track of original x limits.
     predicted_xs, predicted_thetas = file.csv_to_lists("", prediction_file, has_headers=True)
     if x_star is None or theta_star is None:
@@ -263,6 +282,15 @@ def plot_prediction_file(prediction_file, ax, normalize=False, x_star=None, thet
 
 
 def plot_prediction_files(prediction_files, ax, normalize=False, coloured_lines=True, x_stars=None, theta_stars=None):
+    """
+    Plot a series of prediction files on a given axes.
+    :param prediction_files: Array of full prediction file paths.
+    :param ax: Axes to plot on.
+    :param normalize: Whether to normalize the data or not.
+    :param coloured_lines: Set whether the prediction lines should be coloured.
+    :param x_stars: Option to specify an array of x_star values.
+    :param theta_stars: Option to specify an array of theta_star values.
+    """
     x_min, x_max = ax.get_xlim()  # Keep track of original x limits.
     for i, f_name in enumerate(prediction_files):
         x_star = None
@@ -283,6 +311,17 @@ def plot_prediction_files(prediction_files, ax, normalize=False, coloured_lines=
 
 def analyse_slot(ax, sweeps=None, set_y_label=True, set_x_label=True, use_defaults=False,
                  config=None, num_series=None):
+    """
+    Function to plot experimental slot jet angle data.
+    :param ax: The axes on which to plot.
+    :param sweeps: Option to specify SweepData objects to plot.
+    :param set_y_label: Whether this function should set the axes y label.
+    :param set_x_label: Whether this function should set the axes x label.
+    :param use_defaults: Whether to use the default configuration.
+    :param config: A configuration to use.
+    :param num_series: The number of data series to plot.
+    :return: The axes that were used (should be the same as the ax input).
+    """
     create_window = not mpl.get_backend() == "Qt5Agg"
     default_config = {
         "use_all_series": True,
