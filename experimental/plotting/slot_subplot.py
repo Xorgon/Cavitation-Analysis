@@ -53,7 +53,8 @@ for j, i in itertools.product(range(num_rows), range(num_cols)):
         axes[j, i].set_visible(False)
     else:
         axes[j, i].tick_params(axis='both', which='major', labelsize=10)
-        analyse_slot(axes[j, i], set_y_label=(i == 0), set_x_label=(j == num_rows - 1),
+        analyse_slot(axes[j, i], set_y_label=(i == 0),
+                     set_x_label=(j == num_rows - 1 or (j == num_rows - 2 and i >= num_plots % num_cols)),
                      use_defaults=False, config=config, num_series=1)
         axes[j, i].xaxis.label.set_size(10)
         axes[j, i].yaxis.label.set_size(10)
