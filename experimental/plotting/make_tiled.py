@@ -40,12 +40,14 @@ if reading is None:
     raise RuntimeError("Could not find reading.")
 
 b_pos_abs = reading.get_bubble_pos_mm(params.mm_per_px)
-p = b_pos_abs[0] - (params.left_slot_wall_x + params.slot_width / 2)
-q = b_pos_abs[1] - params.upper_surface_y
+x = b_pos_abs[0] - (params.left_slot_wall_x + params.slot_width / 2)
+y = b_pos_abs[1] - params.upper_surface_y
+
 print(f"w = {params.slot_width}\n"
       f"h = {params.slot_height}\n"
-      f"p = {p:.2f}\n"
-      f"q = {q:.2f}")
+      f"x = {x:.2f}\n"
+      f"y = {y:.2f}\n"
+      f"theta = {reading.get_jet_angle():.4f} (radians) = {np.degrees(reading.get_jet_angle()):.2f} (degrees)")
 
 prefix = file.get_prefix_from_idxs(dir_path, [index])
 
