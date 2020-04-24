@@ -81,6 +81,21 @@ class Source(Element):
             return self.mag * (y - self.y_0) / (4 * math.pi * ((x - self.x_0) ** 2 + (y - self.y_0) ** 2) ** (3 / 2))
 
 
+class Source2D(Element):
+    mag = None
+
+    def __init__(self, x, y, magnitude):
+        self.x_0 = x
+        self.y_0 = y
+        self.mag = float(magnitude)
+
+    def get_vel_x(self, x, y, _):
+        return self.mag * (x - self.x_0) / (4 * math.pi * ((x - self.x_0) ** 2 + (y - self.y_0) ** 2))
+
+    def get_vel_y(self, x, y, _):
+        return self.mag * (y - self.y_0) / (4 * math.pi * ((x - self.x_0) ** 2 + (y - self.y_0) ** 2))
+
+
 class Source3D(Element3D):
     x_0 = None
     y_0 = None
