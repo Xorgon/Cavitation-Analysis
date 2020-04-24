@@ -70,10 +70,10 @@ ax.axvline(x=1, linestyle='--', color='gray')
 ax.legend(bbox_to_anchor=(0, -0.34, 2.3, .05), loc=10, ncol=len(Hs), mode="expand",
           borderaxespad=0,
           fancybox=False, edgecolor='k', shadow=False, handlelength=1.5, handletextpad=0.5)
-ax.annotate('($a$)', xy=(0, 0), xytext=(0.115, 0.89), textcoords='figure fraction', horizontalalignment='left',
-            verticalalignment='bottom')
-norm_ax.annotate('($b$)', xy=(0, 0), xytext=(0.61, 0.89), textcoords='figure fraction',
-                 horizontalalignment='left', verticalalignment='bottom')
+ax.annotate('($a$)', xy=(0, 0), xytext=(0.05, 0.95), textcoords='axes fraction', horizontalalignment='left',
+            verticalalignment='top')
+norm_ax.annotate('($b$)', xy=(0, 0), xytext=(0.05, 0.95), textcoords='axes fraction',
+                 horizontalalignment='left', verticalalignment='top')
 # ymin, ymax = ax.get_ylim()
 # ax.set_yticks(np.round(np.linspace(ymin, ymax, 5), 2))
 #
