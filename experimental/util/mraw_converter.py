@@ -16,7 +16,7 @@ from experimental.util.mraw import mraw
 import experimental.util.file_utils as file
 
 
-def convert(mraw_obj, outputFile, codec='X264', fps=24, frame_range=None, scale=1, contrast=1):
+def convert(mraw_obj, outputFile, codec='XVID', fps=24, frame_range=None, scale=1, contrast=1):
     movie = mraw_obj
     if frame_range is None:
         frame_range = (0, len(movie))
@@ -38,7 +38,7 @@ def convert(mraw_obj, outputFile, codec='X264', fps=24, frame_range=None, scale=
     out.release()
 
 
-def convert_mraw(mraw_obj, outputFile, codec='X264', fps=24, separate_readings=False):
+def convert_mraw(mraw_obj, outputFile, codec='XVID', fps=24, separate_readings=False):
     movie = mraw_obj
     if separate_readings:
         repeats = movie.image_count // 100
@@ -49,7 +49,7 @@ def convert_mraw(mraw_obj, outputFile, codec='X264', fps=24, separate_readings=F
         convert(mraw_obj, outputFile, codec=codec, fps=fps, contrast=2)
 
 
-def convert_series(dir_path, codec="X264", file_format="mp4"):
+def convert_series(dir_path, codec="XVID", file_format="mp4"):
     index_file = open(dir_path + "index.csv")
     index_lines = index_file.readlines()
     index_file.close()
@@ -69,4 +69,4 @@ def convert_series(dir_path, codec="X264", file_format="mp4"):
 
 
 if __name__ == "__main__":
-    convert_series(file.select_dir(), codec="X264")
+    convert_series(file.select_dir(), codec="mp4v")
