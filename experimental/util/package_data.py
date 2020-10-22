@@ -7,6 +7,8 @@ from experimental.util.analysis_utils import load_readings
 input_dir = "C:/Users/eda1g15/OneDrive - University of Southampton/Research/Slot Geometries/Data/SlotSweeps/"
 output_dir = "C:/Users/eda1g15/OneDrive - University of Southampton/Research/Slot Geometries/Data/Packaged/"
 
+include_invalid = True
+
 os.makedirs(output_dir)
 
 for geom_dir in os.listdir(input_dir):
@@ -18,15 +20,24 @@ for geom_dir in os.listdir(input_dir):
     shutil.copyfile(input_dir + geom_dir + "/index.csv", output_dir + geom_dir + "/index.csv")
     shutil.copyfile(input_dir + geom_dir + "/description.txt", output_dir + geom_dir + "/description.txt")
 
-    # Copy all valid readings.
+    # Copy movies and plots.
     readings = load_readings(input_dir + geom_dir + "/readings_dump.csv")
     idxs = set([r.idx for r in readings])
     prefix = get_prefix_from_idxs(input_dir + geom_dir + "/", idxs)
-    for reading in readings:
-        movie_dir = geom_dir + "/" + prefix + str(reading.idx).rjust(4, '0') + "/"
-        os.makedirs(output_dir + movie_dir, exist_ok=True)
-        video_name = f"video_{reading.repeat_number}.mp4"
-        shutil.copyfile(input_dir + movie_dir + video_name, output_dir + movie_dir + video_name)
 
-        plot_name = f"analysis_plot_r{reading.repeat_number}.png"
-        shutil.copyfile(input_dir + movie_dir + plot_name, output_dir + movie_dir + plot_name)
+    if include_invalid:
+        for idx in idxs:
+            movie_dir = geom_dir + "/" + prefix + str(idx).rjust(4, '0') + "/"
+            os.makedirs(output_dir + movie_dir, exist_ok=True)
+            for f in os.listdir(input_dir + movie_dir):
+                if f[-4:] == '.mp4' or f[-4:] == '.png':
+                    shutil.copyfile(input_dir + movie_dir + f, output_dir + movie_dir + f)
+    else:
+        for reading in readings:
+            movie_dir = geom_dir + "/" + prefix + str(reading.idx).rjust(4, '0') + "/"
+            os.makedirs(output_dir + movie_dir, exist_ok=True)
+            video_name = f"video_{reading.repeat_number}.mp4"
+            shutil.copyfile(input_dir + movie_dir + video_name, output_dir + movie_dir + video_name)
+
+            plot_name = f"analysis_plot_r{reading.repeat_number}.png"
+            shutil.copyfile(input_dir + movie_dir + plot_name, output_dir + movie_dir + plot_name)
