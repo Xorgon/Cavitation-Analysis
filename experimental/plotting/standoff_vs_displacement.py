@@ -152,4 +152,31 @@ plt.tight_layout()
 # plt.ylabel("$\Delta$ = displacement (mm)")
 # plt.tight_layout()
 
+plt.figure()
+filt_zetas, filt_disps, filt_radii = \
+    zip(*[(z, d, r) for z, d, r, p in zip(zetas, displacements, radii, ps) if np.abs(p) > 4])
+fit_params = np.polyfit(np.log(filt_zetas), np.log(np.divide(filt_disps, filt_radii)), 1)
+fit_zetas = np.linspace(min(filt_zetas), max(filt_zetas), 100)
+fit_disps = np.exp(fit_params[1]) * np.power(fit_zetas, fit_params[0])
+fit_label = "$%.3f \\zeta^{%.3f}$ (fitted)" % (np.exp(fit_params[1]), fit_params[0])
+print(len(filt_zetas))
+
+plt.plot(fit_zetas, fit_disps, label=fit_label, color="C1")
+plt.scatter(filt_zetas, np.divide(filt_disps, filt_radii), c='k',
+            marker=".", cmap=plt.cm.get_cmap('brg'))
+plt.xlabel("$\\zeta$ (Supponen et al. 2016)")
+plt.ylabel("$\Delta / R$ = displacement / radius")
+plt.xscale('log')
+plt.yscale('log')
+plt.legend(frameon=False)
+plt.tight_layout()
+
+plt.figure()
+plt.scatter(standoffs, np.divide(displacements, radii), c=np.abs(ps), marker=".", cmap=plt.cm.get_cmap('brg'))
+plt.xscale('log')
+plt.yscale('log')
+plt.colorbar(label="$|x|$")
+plt.xlabel("$y / R$")
+plt.ylabel("$\Delta / R$ = displacement / radius")
+
 plt.show()
