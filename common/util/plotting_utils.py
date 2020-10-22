@@ -22,7 +22,7 @@ def initialize_plt(font_size=10, line_scale=1, capsize=3):
     font = {'family': 'serif', 'size': font_size, 'serif': ['cmr10']}
     plt.rc('font', **font)
     plt.rc('lines', linewidth=line_scale, markersize=3 * line_scale)
-    plt.rc('axes', linewidth=0.5)
+    plt.rc('axes', linewidth=0.5*line_scale)
     plt.rc('patch', linewidth=0.5 * line_scale)
     plt.rc('errorbar', capsize=capsize)
 
