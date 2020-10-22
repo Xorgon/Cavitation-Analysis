@@ -23,7 +23,7 @@ class Reading:
     idx = None
     repeat_number = None
 
-    disp_vect = None  # Bubble displacement vector
+    disp_vect = None  # Bubble displacement vector (pixels)
     sup_disp_vect = None  # Displacement vector between minima as in Supponen et al. (2016)
     bubble_pos = None  # Bubble position in the frame (px coords)
     max_bubble_area = None  # Maximum bubble area (pixels)
@@ -329,6 +329,13 @@ def analyse_series(dir_path, frame_shape=(384, 264)):
             bkp_num += 1
         os.rename(dir_path + "readings_dump.csv", dir_path + f"readings_dump.csv.bkp.{bkp_num}")
 
+    dump_file = open(dir_path + "readings_dump.csv", "a")
+    dump_file.write("index:repeat number, measured x (mm), measured y (mm), measured z (mm), "
+                    "peak-to-peak x displacement (px), peak-to-peak y displacement (px), "
+                    "in-frame bubble position x (px), in-frame bubble position y (px), "
+                    "maximum bubble area (px^2), second maximum of bubble area (px^2), frames between maxima, "
+                    "minimum-to-minimum x displacement (px), minimum-to-minimum y displacement (px)\n")
+
     sideways = False
     # Identify system:
     headers = index_lines[0].strip().split(",")
@@ -384,17 +391,12 @@ def analyse_series(dir_path, frame_shape=(384, 264)):
             readings.append(reading)
             to_write += 1
 
-        dump_file = open(dir_path + "readings_dump.csv", "a")
-        dump_file.write("index:repeat number, measured x (mm), measured y (mm), measured z (mm), "
-                        "peak-to-peak x displacement (px), peak-to-peak y displacement (px), "
-                        "in-frame bubble position x (px), in-frame bubble position y (px), "
-                        "maximum bubble area (px^2), second maximum of bubble area (px^2), frames between maxima, "
-                        "minimum-to-minimum x displacement (px), minimum-to-minimum y displacement (px)\n")
         for j in range(1, to_write + 1):
             reading = readings[-j]
             if reading.is_complete():
                 dump_file.write(str(reading) + "\n")
-        dump_file.close()
+
+    dump_file.close()
 
     try:
         flag_invalid_readings(dir_path)
@@ -432,4 +434,4 @@ def flag_invalid_readings(dir_path):
 
 
 if __name__ == "__main__":
-    flag_invalid_readings("../../../Data/SlotSweeps/w2h9-closed/")
+    flag_invalid_readings(file.select_dir("../../../../../"))
