@@ -60,7 +60,7 @@ def plot_peak_sweep(h_mat, y_mat, theta_star_mat, x_star_mat, theta_grad_mat,
     cbar.ax.set_xticklabels(cbar.ax.get_xticklabels(), rotation='45')
 
     plt.sca(axes[1])
-    cnt = plt.contourf(h_mat, y_mat, x_star_mat, levels=16)
+    cnt = plt.contourf(h_mat, y_mat, x_star_mat, levels=np.arange(0.5, 6.5, 0.25))
     plt.xticks(range(1, 5 + 1))
     plt.yticks(range(1, 5 + 1))
     for c in cnt.collections:
@@ -68,6 +68,7 @@ def plot_peak_sweep(h_mat, y_mat, theta_star_mat, x_star_mat, theta_grad_mat,
     plt.xlabel("$h$", labelpad=0)
     plt.ylabel("$y$")
     cbar = plt.colorbar(label="$x^\\star$", orientation='horizontal')
+    cbar.set_ticks(np.arange(0.5, 7, 0.5))
     cbar.ax.set_xticklabels(cbar.ax.get_xticklabels(), rotation='45')
 
     for ax in axes:
