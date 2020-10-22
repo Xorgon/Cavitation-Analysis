@@ -98,12 +98,12 @@ def plot_3d_points(points, c=None, cmap_name="RdBu", center_cmap=True):
 def plot_2d_point_sets(point_sets):
     colors = ["r", "b", "g", "orange", "k", "yellow"]
     fig = plt.figure()
-    ax = fig.add_subplot(111)  # type: Axes3D
+    ax = fig.add_subplot(111, aspect='equal')
     for i in range(len(point_sets)):
         points = np.array(point_sets[i])
         ax.scatter(points[:, 0], points[:, 1], c=colors[i])
     ax.set_xlabel('X')
-    ax.set_ylabel('Z')
+    ax.set_ylabel('Y')
 
     lim = [min([ax.get_xlim()[0], ax.get_ylim()[0]]),
            max([ax.get_xlim()[1], ax.get_ylim()[1]])]
