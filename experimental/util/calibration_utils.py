@@ -24,8 +24,8 @@ def calculate_offset(frame_1, frame_2, plot_compared_frames=False):
     """
     frame_1 = denoise_bilateral(frame_1, multichannel=False, bins=2)
     frame_2 = denoise_bilateral(frame_2, multichannel=False, bins=2)
-    # frame_1 = sobel(frame_1)
-    # frame_2 = sobel(frame_2)
+    frame_1 = sobel(frame_1)
+    frame_2 = sobel(frame_2)
 
     thresh_1 = threshold_triangle(frame_1)
     thresh_2 = threshold_triangle(frame_2)
