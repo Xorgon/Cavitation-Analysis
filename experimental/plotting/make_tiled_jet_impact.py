@@ -13,16 +13,16 @@ import experimental.util.analysis_utils as au
 
 black_border = True
 
-repeat = 3
-index = 24
-frame_idxs = [16, 25, 33, 37, 74]
+repeat = 2
+index = 53
+frame_idxs = [16, 27, 39, 41, 47, 64]
 
-tile_tl_corner = (119, 55)
-tile_br_corner = (302, 236)
+tile_tl_corner = (147, 8)
+tile_br_corner = (272, 148)
 img_scale = 8
 fig_scale = 3
 
-dir_path = "../../../../Data/SlotSweeps/W2H3a/"
+dir_path = "../../../../Data/SlotSweeps/W1H3/"
 
 readings = au.load_readings(dir_path + "readings_dump.csv")
 readings = sorted(readings, key=lambda r: r.idx)  # type: List[au.Reading]

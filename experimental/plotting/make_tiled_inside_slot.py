@@ -13,16 +13,15 @@ import experimental.util.analysis_utils as au
 
 black_border = True
 
-repeat = 3
-index = 24
-frame_idxs = [16, 25, 33, 37, 74]
+repeat = 2
+index = 1
+frame_idxs = [17, 27, 37, 40, 42, 47]
 
-tile_tl_corner = (119, 55)
-tile_br_corner = (302, 236)
-img_scale = 8
-fig_scale = 3
+tile_tl_corner = (131, 0)
+tile_br_corner = (292, 150)
+scale = 2
 
-dir_path = "../../../../Data/SlotSweeps/W2H3a/"
+dir_path = "../../../../Data/SlotSweeps/W4H12/"
 
 readings = au.load_readings(dir_path + "readings_dump.csv")
 readings = sorted(readings, key=lambda r: r.idx)  # type: List[au.Reading]
@@ -66,14 +65,14 @@ for idx in frame_idxs:
 width = tile_br_corner[0] - tile_tl_corner[0] + 2
 height = (tile_br_corner[1] - tile_tl_corner[1]) * 1.2
 
-surface_y_px = img_scale * (mov.height - (params.upper_surface_y - reading.m_y) / params.mm_per_px)
-floor_y_px = img_scale * (mov.height - (params.upper_surface_y - params.slot_height - reading.m_y) / params.mm_per_px)
-left_x_px = img_scale * (params.left_slot_wall_x - reading.m_x) / params.mm_per_px
-right_x_px = img_scale * (params.left_slot_wall_x + params.slot_width - reading.m_x) / params.mm_per_px
+surface_y_px = scale * (mov.height - (params.upper_surface_y - reading.m_y) / params.mm_per_px)
+floor_y_px = scale * (mov.height - (params.upper_surface_y - params.slot_height - reading.m_y) / params.mm_per_px)
+left_x_px = scale * (params.left_slot_wall_x - reading.m_x) / params.mm_per_px
+right_x_px = scale * (params.left_slot_wall_x + params.slot_width - reading.m_x) / params.mm_per_px
 
-plt_util.initialize_plt(font_size=10*fig_scale, line_scale=fig_scale, capsize=3*fig_scale)
+plt_util.initialize_plt()
 
-fig_width = 5.31445 * fig_scale
+fig_width = 5.31445
 fig = plt.figure(figsize=(fig_width, fig_width * height / (len(frame_idxs) * width)))
 
 num_sub_plots = len(frame_idxs)
@@ -83,7 +82,7 @@ for k, idx in enumerate(frame_idxs):
     frame = np.int32(mov[repeat * 100 + idx])
     # frame = frame[tile_tl_corner[1]:tile_br_corner[1],
     #         tile_tl_corner[0]:tile_br_corner[0]]
-    frame = resize(frame, (frame.shape[0] * img_scale, frame.shape[1] * img_scale))
+    frame = resize(frame, (frame.shape[0] * scale, frame.shape[1] * scale))
     plot_num = 100 + 10 * num_sub_plots + (k + 1)
     ax = fig.add_subplot(plot_num)
     ax.imshow(frame, cmap=plt.cm.gray)
@@ -95,24 +94,22 @@ for k, idx in enumerate(frame_idxs):
     ax.plot([left_x_px, left_x_px], [surface_y_px, floor_y_px], style)
     ax.plot([left_x_px, right_x_px], [floor_y_px, floor_y_px], style)
     ax.plot([right_x_px, right_x_px], [floor_y_px, surface_y_px], style)
-    ax.plot([right_x_px, mov.width * img_scale], [surface_y_px, surface_y_px], style)
+    ax.plot([right_x_px, mov.width * scale], [surface_y_px, surface_y_px], style)
 
-    ax.set_xlim((img_scale * tile_tl_corner[0], img_scale * tile_br_corner[0]))
-    ax.set_ylim((img_scale * tile_br_corner[1], img_scale * tile_tl_corner[1]))
-    plt.text((tile_br_corner[0] - 0.05 * height) * img_scale,
-             (tile_br_corner[1] + 0.05 * height) * img_scale,
+    ax.set_xlim((scale * tile_tl_corner[0], scale * tile_br_corner[0]))
+    ax.set_ylim((scale * tile_br_corner[1], scale * tile_tl_corner[1]))
+    plt.text((tile_br_corner[0] - 0.05 * height) * scale,
+             (tile_br_corner[1] + 0.05 * height) * scale,
              f"$t = {times[k] * 1e6:.0f} \mu s$", horizontalalignment='right', verticalalignment='top',
              color="black")
     if k == 0:
-        sbar_x_max = img_scale * (tile_br_corner[0] - 0.1 * width)
-        sbar_x_min = sbar_x_max - img_scale * 1 / params.mm_per_px
-        sbar_y_pos = img_scale * (tile_tl_corner[1] + 0.12 * height)
+        sbar_x_max = scale * (tile_br_corner[0] - 0.1 * width)
+        sbar_x_min = sbar_x_max - scale * 1 / params.mm_per_px
+        sbar_y_pos = scale * (tile_tl_corner[1] + 0.12 * height)
         ax.plot([sbar_x_min, sbar_x_max],
-                [sbar_y_pos, sbar_y_pos], 'k', linewidth=2*fig_scale)
+                [sbar_y_pos, sbar_y_pos], 'w', linewidth=2)
         ax.annotate("$1 mm$", [0.5 * (sbar_x_min + sbar_x_max), sbar_y_pos],
-                    [0.5 * (sbar_x_min + sbar_x_max), sbar_y_pos - img_scale * 0.01 * height],
-                    color="black", horizontalalignment='center', verticalalignment='bottom')
-plt.subplots_adjust(left=0.005, right=0.995, top=1, bottom=0.15, wspace=0.05, hspace=0.05)
-# plt.savefig("fig2.eps", dpi=300)
+                    [0.5 * (sbar_x_min + sbar_x_max), sbar_y_pos - scale * 0.01 * height],
+                    color="white", horizontalalignment='center', verticalalignment='bottom')
+plt.subplots_adjust(left=0, right=1, top=1, bottom=0.15, wspace=0.05, hspace=0.05)
 plt.show()
-
