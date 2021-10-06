@@ -22,12 +22,14 @@ import numpy as np
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QPainter, QPen, QIcon, QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QTextBrowser, QMainWindow, \
-    QPushButton, QSlider, QSpacerItem, QSizePolicy, QStyle, QFileDialog, QLayout
+    QPushButton, QSlider, QSpacerItem, QSizePolicy, QStyle, QFileDialog, QLayout, QCheckBox
 
 import experimental.util.calibration_utils as cu
 import experimental.util.file_utils as file
 import experimental.util.qt_utils as qtu
 import experimental.util.mraw_converter as mraw_converter
+import experimental.util.determineDisplacement as dd
+import experimental.util.analysis_utils as au
 import common.util.vector_utils as vect
 
 
@@ -119,6 +121,10 @@ class DataWidget(QWidget):
 
     position_prefix = None
 
+    draw_binary = False
+    show_debug = False
+    autoscale_brightness = True
+
     def __init__(self, text_area, position_status, file_dir, aux_box: ImageDisplayWidget, main_window: QMainWindow,
                  zoom=2, parent=None, frame_idx=0, max_frames=100):
         if parent:
@@ -173,6 +179,8 @@ class DataWidget(QWidget):
                                                                                                             '0') + "/"
         mov = file.get_mraw_from_dir(r_dir_path)
         image = mov[self.frame_idx + self.max_frames * self.repeat_idx]
+        bg_img = mov[0]
+        binary = dd.makeBinary(np.int32(bg_img) - np.int32(image))
         self.total_frames = mov.image_count
         mov.close()
 
@@ -184,7 +192,10 @@ class DataWidget(QWidget):
             self.main_window.update()
 
         # Convert to pixel map.
-        pixmap = qtu.frame_to_pixmap(image)
+        if self.draw_binary:
+            pixmap = qtu.frame_to_pixmap(np.int32(binary), autoscale=True)
+        else:
+            pixmap = qtu.frame_to_pixmap(image, autoscale=self.autoscale_brightness)
         pixmap = pixmap.scaledToHeight(pixmap.height() * 2)
 
         # Draw frame.
@@ -193,6 +204,26 @@ class DataWidget(QWidget):
             qp.setRenderHint(QPainter.Antialiasing)
         qp.begin(self)
         qp.drawPixmap(0, 0, pixmap)
+
+        # Draw bubble position
+        if self.show_debug:
+            b_pos_x, b_pos_y, area, ecc, sol = au.analyse_frame(image, bg_img, debug=True)
+            if b_pos_x is not None and b_pos_y is not None:
+                self.draw_point(qp, [(b_pos_x + 1) * self.zoom, (b_pos_y + 1) * self.zoom],
+                                Qt.magenta)
+
+            if area is not None:
+                self.draw_circle(qp, [(b_pos_x + 1) * self.zoom, (b_pos_y + 1) * self.zoom],
+                                 self.zoom * np.sqrt(area / np.pi), Qt.magenta)
+
+            if ecc is not None and sol is not None:
+                if area is None:
+                    qp.drawText(b_pos_x * self.zoom + 5,
+                                b_pos_y * self.zoom + 5, f"ecc = {ecc:.2f}, sol = {sol:.2f}")
+                else:
+                    qp.drawText((b_pos_x + np.sqrt(area / np.pi)) * self.zoom,
+                                (b_pos_y + np.sqrt(area / np.pi)) * self.zoom,
+                                f"ecc = {ecc:.2f}, sol = {sol:.2f}, R = {np.sqrt(area / np.pi):.2f}")
 
         # Draw ruler.
         if self.point_1 is not None and self.point_2 is None:
@@ -216,15 +247,23 @@ class DataWidget(QWidget):
         mraw_converter.convert(mov, filename, codec='X264', fps=10,
                                frame_range=(100 * self.repeat_idx, 100 * (self.repeat_idx + 1)), contrast=2)
 
-    def draw_point(self, qp, point):
-        pen = QPen(Qt.red, 4, Qt.SolidLine)
+    def draw_point(self, qp, point, colour=Qt.red):
+        pen = QPen(colour, 4, Qt.SolidLine)
+        qp.setRenderHint(QPainter.Antialiasing)
         qp.setPen(pen)
         qp.drawPoint(point[0], point[1])
 
     def draw_line(self, qp):
         pen = QPen(Qt.red, 2, Qt.SolidLine)
+        qp.setRenderHint(QPainter.Antialiasing)
         qp.setPen(pen)
         qp.drawLine(self.point_1[0], self.point_1[1], self.point_2[0], self.point_2[1])
+
+    def draw_circle(self, qp, center, radius, colour=Qt.red):
+        pen = QPen(colour, 2, Qt.SolidLine)
+        qp.setRenderHint(QPainter.Antialiasing)
+        qp.setPen(pen)
+        qp.drawEllipse(center[0] - radius, center[1] - radius, 2 * radius, 2 * radius)
 
     def next_frame(self):
         self.frame_idx += 1
@@ -290,6 +329,18 @@ class DataWidget(QWidget):
 
     def set_frame(self, frame_idx):
         self.frame_idx = frame_idx
+        self.update()
+
+    def set_draw_binary(self, draw_binary):
+        self.draw_binary = draw_binary
+        self.update()
+
+    def set_show_debug(self, show_debug):
+        self.show_debug = show_debug
+        self.update()
+
+    def set_autoscale_brightness(self, autoscale_brightness):
+        self.autoscale_brightness = autoscale_brightness
         self.update()
 
     def update_text(self):
@@ -584,7 +635,7 @@ class BubbleAnalyser(QMainWindow):
     def __init__(self, file_dir=None):
         super().__init__()
         while file_dir is None or not os.path.exists(file_dir + "index.csv"):
-            file_dir = str(QFileDialog.getExistingDirectory(self, "Select Directory", "../../../../Data/"))
+            file_dir = str(QFileDialog.getExistingDirectory(self, "Select Directory", "../../../../../"))
             if file_dir == "":
                 QTimer.singleShot(0, self.close)
                 return
@@ -725,6 +776,22 @@ class BubbleAnalyser(QMainWindow):
         rep_forward.setAutoRepeat(True)
         rep_forward.clicked.connect(self.data_widget.next_repeat)
         button_box.addWidget(rep_forward)
+
+        button_box.addItem(spacer)
+
+        binary_toggle = QCheckBox("Binary")
+        binary_toggle.stateChanged.connect(lambda _: self.data_widget.set_draw_binary(binary_toggle.isChecked()))
+        button_box.addWidget(binary_toggle)
+
+        debug_toggle = QCheckBox("Debug")
+        debug_toggle.stateChanged.connect(lambda _: self.data_widget.set_show_debug(debug_toggle.isChecked()))
+        button_box.addWidget(debug_toggle)
+
+        auto_bright_toggle = QCheckBox("Autoscale Brightness", )
+        auto_bright_toggle.setChecked(True)
+        auto_bright_toggle.stateChanged.connect(
+            lambda _: self.data_widget.set_autoscale_brightness(auto_bright_toggle.isChecked()))
+        button_box.addWidget(auto_bright_toggle)
 
         # Build window contents
         vbox = QVBoxLayout()  # Main box.
