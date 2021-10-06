@@ -5,6 +5,8 @@ from matplotlib.colors import LinearSegmentedColormap
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 
+def fig_width():
+    return 5.31445
 
 def plot_frame(frame, pos=None, show_immediately=True):
     plt.figure()
@@ -17,13 +19,16 @@ def plot_frame(frame, pos=None, show_immediately=True):
         plt.show()
 
 
-def initialize_plt(font_size=10, line_scale=1, capsize=3):
-    plt.rc('text', usetex=True)
-    font = {'family': 'serif', 'size': font_size, 'serif': ['cmr10']}
-    plt.rc('font', **font)
+def initialize_plt(font_size=10, line_scale=1, capsize=3, latex=True):
+    if (latex):
+        plt.rc('text', usetex=True)
+        plt.rc('text.latex', preamble=r'\usepackage{amsmath}\usepackage{amsfonts}\usepackage{amssymb}\DeclareMathAlphabet\mathsfbi{OT1}{cmss}{m}{sl}')
+        font = {'family': 'serif', 'size': font_size, 'serif': ['cmr10']}
+        plt.rc('font', **font)
     plt.rc('lines', linewidth=line_scale, markersize=3 * line_scale)
     plt.rc('axes', linewidth=0.5*line_scale)
     plt.rc('patch', linewidth=0.5 * line_scale)
+    plt.rc('figure', dpi=300)
     plt.rc('errorbar', capsize=capsize)
 
 
