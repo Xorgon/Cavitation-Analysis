@@ -12,12 +12,14 @@ if not os.path.exists("../model_outputs/slot_vel_data"):
     os.makedirs("../model_outputs/slot_vel_data")
 
 offset = 0.05
-W = 10
-H = 1
+W = 2.20
+H = 2.70
 N = 64
-Ys = np.concatenate([np.linspace(offset, 3, np.round(3 * N / 4) - 1), [2], np.linspace(3 + 0.1, W * 5, np.ceil(N / 4))])
+Ys = np.concatenate([np.linspace(offset, 3, np.round(3 * N / 4) - 1),
+                     [2.81],
+                     np.linspace(3 + 0.1, W * 5, np.ceil(N / 4))])
 Ys = sorted(Ys)
-x_limit = 1.5
+x_limit = 6
 Xs = np.concatenate([np.linspace(-x_limit * W / 2, -W, np.ceil(N / 8)),
                      np.linspace(-W + 0.1, W - 0.1, np.round(3 * N / 4)),
                      np.linspace(W, x_limit * W / 2, np.ceil(N / 8))])

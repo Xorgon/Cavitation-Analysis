@@ -19,8 +19,10 @@ us = []
 vs = []
 speeds = []
 
-file = open(f"../model_outputs/slot_vel_data/vel_sweep_n{n}_W{W:.2f}_H{H:.2f}"
-            f"_drat{density_ratio}_wthresh{w_thresh}_len{length}_N{N}.csv", 'r')
+data_dir = "../model_outputs/slot_vel_data/"
+
+file = open(f"{data_dir}vel_sweep_n{n}_W{W:.2f}_H{H:.2f}"
+                       f"_drat{density_ratio}_wthresh{w_thresh}_len{length}_N{N}.csv", 'r')
 
 for line in file.readlines():
     X, Y, u, v = line.split(',')
@@ -61,7 +63,7 @@ else:
 c_xs = []
 c_ys = []
 c_zs = []
-centroids_file = open(f"../model_outputs/slot_vel_data/centroids_n{n}_W{W:.2f}_H{H:.2f}"
+centroids_file = open(f"{data_dir}centroids_n{n}_W{W:.2f}_H{H:.2f}"
                       f"_drat{density_ratio}_wthresh{w_thresh}_len{length}.csv", 'r')
 for line in centroids_file.readlines():
     split = line.split(",")
@@ -72,7 +74,7 @@ for line in centroids_file.readlines():
 n_xs = []
 n_ys = []
 n_zs = []
-normals_file = open(f"../model_outputs/slot_vel_data/normals_n{n}_W{W:.2f}_H{H:.2f}"
+normals_file = open(f"{data_dir}normals_n{n}_W{W:.2f}_H{H:.2f}"
                     f"_drat{density_ratio}_wthresh{w_thresh}_len{length}.csv", 'r')
 for line in normals_file.readlines():
     split = line.split(",")
@@ -137,6 +139,9 @@ plt.plot([min(Xs) * 2 / W, -1, -1, 1, 1, max(Xs) * 2 / W], [0, 0, -2 * H / W, -2
 Yticks = np.array(range(-2, int(np.max(Y_mat[min_y_idx:max_y_idx, :])) + 1, 2))
 ax.set_yticks(Yticks)
 ax.set_yticklabels(Yticks / 2)  # Hack to get scaling and sizing right.
+# Everything here is normalised as y = Y / (W / 2) rather than y = Y / W (as in the paper). This is corrected in the
+# axis labelling so that it SHOWS y = Y / W. This is necessary because set_aspect(2, ...) would mess up the sizing of
+# the plot.
 plt.scatter(np.divide(c_xs, 0.5 * W), np.divide(c_ys, 0.5 * W), marker='.', color='k')
 # for x, y, angle in zip(xs, ys, angles):
 #     plt.scatter(x, y, marker=(3, 0, np.degrees(angle)), color='k')
@@ -146,7 +151,7 @@ Y_idx = int(np.argmin(np.abs(np.subtract(np.divide(Ys, W), target_y))))
 line_y = Ys[Y_idx] / W
 
 plt.axhline(2 * line_y, color='k', linestyle='--')
-plt.annotate(f"($a$)", xy=(0, 0), xytext=(0.025, 0.975),
+plt.annotate(f"($a$)", xy=(0, 0), xytext=(0.025, 0.965),
              textcoords='axes fraction',
              horizontalalignment='left', verticalalignment='top')
 
@@ -161,11 +166,11 @@ cax.set_yticklabels(["$-\\pi / 4$", "$-\\pi / 8$", "0", "$\\pi / 8$", "$\\pi / 4
 lax = divider.append_axes('bottom', 1.2, pad=0.1, sharex=ax)
 thetas = np.arctan2(vs, us) + np.pi / 2
 line_Xs, line_Ys, line_thetas = zip(*[(X, Y, theta) for X, Y, theta in zip(Xs, Ys, thetas) if Y / W == line_y])
-lax.plot(2 * np.divide(line_Xs, W), line_thetas, 'k--', label=f"$y = {line_y:.2f}$")
+lax.plot(2 * np.divide(line_Xs, W), line_thetas, 'k--', label=f"$y = {line_y:.0f}$")
 plt.xlabel("$x$")
 plt.ylabel("$\\theta$ (rad)")
 plt.legend(frameon=False, loc='lower right')
-plt.annotate(f"($b$)", xy=(0, 0), xytext=(0.025, 0.95),
+plt.annotate(f"($b$)", xy=(0, 0), xytext=(0.025, 0.93),
              textcoords='axes fraction',
              horizontalalignment='left', verticalalignment='top')
 

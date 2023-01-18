@@ -10,15 +10,15 @@ import common.util.file_utils as file
 import scipy.sparse
 
 # Xs = [8]
-W = 2
-H = 2
-Ys = [2]
+W = 2.14
+H = 8.21
+Ys = [1.66, 2.66]
 
-x_lim = 20
-Xs = np.linspace(-x_lim * W / 2, x_lim * W / 2, 128)
+x_lim = 5
+Xs = np.linspace(-x_lim * W / 2, x_lim * W / 2, 100)
 
 save_to_file = False
-calculate_error = False
+calculate_error = True
 normalise = False
 show_plot = True
 
@@ -26,11 +26,11 @@ if not (save_to_file or show_plot):
     raise ValueError("No output selected for model.")
 
 m_b = 1
-n = 20000
+n = 10000
 density_ratio = 0.25
-w_thresh = 1.2 * x_lim
+w_thresh = 5
 
-out_dir = "../model_outputs/slot/"
+out_dir = "../model_outputs/exp_comparisons/"
 
 if not os.path.exists(out_dir) and save_to_file:
     os.makedirs(out_dir)
@@ -40,7 +40,7 @@ centroids, normals, areas = gen.gen_varied_slot(n=n, H=H, W=W, length=100, depth
                                                 density_ratio=density_ratio)
 print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
 # plot_3d_point_sets([centroids])
-R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
+R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float64)
 R_inv = scipy.linalg.inv(R_matrix)
 
 condition_number_1 = np.linalg.norm(R_inv, 1) * np.linalg.norm(R_matrix, 1)

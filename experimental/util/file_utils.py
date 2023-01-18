@@ -3,6 +3,7 @@ import re
 from experimental.util.mraw import mraw
 from PyQt5.QtWidgets import QFileDialog, QApplication
 import sys
+import importlib
 
 
 def get_prefix_from_idxs(dir_path, idxs):
@@ -46,8 +47,17 @@ def get_mraw_from_dir(dir_path):
     return mraw(dir_path + headers[0])
 
 
-def select_dir(start_path="../../../../Data/SlotSweeps", create_window=True):
+def select_dir(start_path="../../../../../", create_window=True):
     if create_window:
         window = QApplication([])
     dir_path = str(QFileDialog.getExistingDirectory(None, "Select Directory", start_path)) + "/"
     return dir_path
+
+
+def load_params(params_dir):
+    sys.path.append(params_dir)
+    import params
+
+    importlib.reload(params)
+    sys.path.remove(params_dir)
+    return params

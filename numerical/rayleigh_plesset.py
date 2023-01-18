@@ -9,8 +9,10 @@ def rp(t, lhs, density=997, kin_visc=0.10533e-5, surf_tension=0, delta_P=lambda 
     R = lhs[0]
     R_dot = lhs[1]
     return [R_dot,
-            -3 * R_dot ** 2 / (2 * R) - 4 * kin_visc * R_dot / (R ** 2)
-            - 2 * surf_tension / (density * R ** 2) + delta_P(t, R) / (R * density)]
+            -3 * R_dot ** 2 / (2 * R)
+            - 4 * kin_visc * R_dot / (R ** 2)
+            - 2 * surf_tension / (density * R ** 2)
+            + delta_P(t, R) / (R * density)]
 
 
 def non_dim_rp(t, lhs, Re, We, pressure_ratio, polytropic_const=1.33):
@@ -23,6 +25,7 @@ def non_dim_rp(t, lhs, Re, We, pressure_ratio, polytropic_const=1.33):
             - 4 * R_dot / (R ** 2 * Re)
             - 2 / (R ** 2 * We)]
 
+
 def inertia_only_rp(t, lhs):
     """ Non-dimensional Rayleigh-Plesset formulation as two first order ODEs with only inertia terms. """
     R = lhs[0]
@@ -30,6 +33,7 @@ def inertia_only_rp(t, lhs):
     return [R_dot,
             -95322.4 / R
             - 3 * R_dot ** 2 / (2 * R)]
+
 
 density = 997
 kin_visc = 1.003e-6
@@ -48,8 +52,8 @@ We = density * R_init * u ** 2 / surf_tension
 print("Weber number = ", We)
 Re = u * R_init / kin_visc
 print("Reynolds number = ", Re)
-Eu = (P_init + P_vapour - P_inf)
-print("Euler number = ", Eu)
+# Eu = (P_init + P_vapour - P_inf) / inertial stuff  VARIES IN TIME
+# print("Euler number = ", Eu)
 pressure_ratio = P_init / (P_inf - P_vapour)
 print("Pressure ratio = ", pressure_ratio)
 
@@ -60,15 +64,18 @@ def delta_P(t, R):
     return P_init * (R_init / R) ** (3 * polytropic_const) + P_vapour - P_inf
 
 
-initialize_plt()
-out = solve_ivp(rp, (0, sim_length), (R_init, 0), max_step=sim_length / 50000,
+# initialize_plt()
+out = solve_ivp(rp, (0, sim_length), (R_init, 0), max_step=sim_length / 5000,
                 args=(density, kin_visc, surf_tension, delta_P))
 non_dim_out = solve_ivp(non_dim_rp, (0, 5), (1, 0), max_step=sim_length / 100,
-                args=(Re, We, pressure_ratio, polytropic_const))
-inertia_only_out = solve_ivp(inertia_only_rp, (0, 5), (1, 0), max_step=sim_length / 100)
+                        args=(Re, We, pressure_ratio, polytropic_const))
+# inertia_only_out = solve_ivp(inertia_only_rp, (0, 5), (1, 0), max_step=sim_length / 100)
 plt.plot(out.t / ray_col_time, out.y[0, :] / R_init)
 plt.plot(non_dim_out.t, non_dim_out.y[0, :])
-plt.plot(inertia_only_out.t, inertia_only_out.y[0, :])
+# plt.plot(inertia_only_out.t, inertia_only_out.y[0, :])
 plt.xlabel("$t / t_{TC}$")
 plt.ylabel("$R / R_0$")
+
+plt.figure()
+
 plt.show()

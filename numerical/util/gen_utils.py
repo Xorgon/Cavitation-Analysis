@@ -1,6 +1,8 @@
 import itertools as it
 import math
 import warnings
+import matplotlib.pyplot as plt
+from common.util.plotting_utils import plot_3d_point_sets
 
 import numpy as np
 
@@ -48,7 +50,7 @@ def gen_plane(corner_1, corner_2, corner_3, n, filename=None):
 
     if filename is not None:
         f = open(f"{filename[:-4]}-{side_1_n}x{side_2_n}{filename[-4:]}", "w")
-        f.write("x,y,z\n")
+        f.write("x,y,z,0\n")
         to_add = []  # To save for writing at the end.
         for i, j in it.product(range(side_1_n), range(side_2_n)):
             panel_c1 = corner_1 + i * side_1_panel_h * vect_1_hat + j * side_2_panel_h * vect_2_hat
@@ -56,13 +58,14 @@ def gen_plane(corner_1, corner_2, corner_3, n, filename=None):
             panel_c3 = panel_c1 + side_2_panel_h * vect_2_hat
             panel_c4 = panel_c1 + side_1_panel_h * vect_1_hat + side_2_panel_h * vect_2_hat
 
-            f.write(f"{panel_c1[0]},{panel_c1[1]},{panel_c1[2]}\n")
+            # Adding a zero so that it can be used in paraview properly
+            f.write(f"{panel_c1[0]},{panel_c1[1]},{panel_c1[2]},0\n")
             if i == side_1_n - 1:
-                to_add.append(f"{panel_c2[0]},{panel_c2[1]},{panel_c2[2]}\n")
+                to_add.append(f"{panel_c2[0]},{panel_c2[1]},{panel_c2[2]},0\n")
             if j == side_2_n - 1:
-                f.write(f"{panel_c3[0]},{panel_c3[1]},{panel_c3[2]}\n")
+                f.write(f"{panel_c3[0]},{panel_c3[1]},{panel_c3[2]},0\n")
             if i == side_1_n - 1 and j == side_2_n - 1:
-                to_add.append(f"{panel_c4[0]},{panel_c4[1]},{panel_c4[2]}\n")
+                to_add.append(f"{panel_c4[0]},{panel_c4[1]},{panel_c4[2]},0\n")
         for s in to_add:
             f.write(s)
         f.close()
@@ -73,6 +76,98 @@ def gen_plane(corner_1, corner_2, corner_3, n, filename=None):
         centroids.append(c)
         normals.append(normal)
         areas.append(panel_area)
+
+    return np.array(centroids), np.array(normals), np.array(areas)
+
+
+def gen_varied_simple_plane(dense_length, n_dense, sparse_length, n_sparse):
+    centroids = []
+    normals = []
+    areas = []
+
+    sparse_area = sparse_length ** 2 - dense_length ** 2
+    npa = n_sparse / sparse_area
+
+    # CENTRAL PANEL
+    p_centroids, p_normals, p_areas = gen_plane([- dense_length / 2, 0, - dense_length / 2],
+                                                [- dense_length / 2, 0, dense_length / 2],
+                                                [dense_length / 2, 0, - dense_length / 2],
+                                                n_dense)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    # CORNER -,-
+    p_centroids, p_normals, p_areas = gen_plane([- sparse_length / 2, 0, - sparse_length / 2],
+                                                [- sparse_length / 2, 0, -dense_length / 2],
+                                                [-dense_length / 2, 0, - sparse_length / 2],
+                                                npa * (sparse_length - dense_length) ** 2 / 4)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    # CORNER -,+
+    p_centroids, p_normals, p_areas = gen_plane([-sparse_length / 2, 0, dense_length / 2],
+                                                [- sparse_length / 2, 0, sparse_length / 2],
+                                                [-dense_length / 2, 0, dense_length / 2],
+                                                npa * (sparse_length - dense_length) ** 2 / 4)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    # CORNER +,-
+    p_centroids, p_normals, p_areas = gen_plane([dense_length / 2, 0, -sparse_length / 2],
+                                                [dense_length / 2, 0, -dense_length / 2],
+                                                [sparse_length / 2, 0, -sparse_length / 2],
+                                                npa * (sparse_length - dense_length) ** 2 / 4)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    # CORNER +,+
+    p_centroids, p_normals, p_areas = gen_plane([dense_length / 2, 0, dense_length / 2],
+                                                [dense_length / 2, 0, sparse_length / 2],
+                                                [sparse_length / 2, 0, dense_length / 2],
+                                                npa * (sparse_length - dense_length) ** 2 / 4)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    # EDGE Z-
+    p_centroids, p_normals, p_areas = gen_plane([-dense_length / 2, 0, -sparse_length / 2],
+                                                [-dense_length / 2, 0, -dense_length / 2],
+                                                [dense_length / 2, 0, -sparse_length / 2],
+                                                npa * dense_length * (sparse_length - dense_length) / 2)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    # EDGE Z+
+    p_centroids, p_normals, p_areas = gen_plane([-dense_length / 2, 0, dense_length / 2],
+                                                [-dense_length / 2, 0, sparse_length / 2],
+                                                [dense_length / 2, 0, dense_length / 2],
+                                                npa * dense_length * (sparse_length - dense_length) / 2)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    # EDGE X-
+    p_centroids, p_normals, p_areas = gen_plane([-sparse_length / 2, 0, -dense_length / 2],
+                                                [-sparse_length / 2, 0, dense_length / 2],
+                                                [-dense_length / 2, 0, -dense_length / 2],
+                                                npa * dense_length * (sparse_length - dense_length) / 2)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    # EDGE X+
+    p_centroids, p_normals, p_areas = gen_plane([dense_length / 2, 0, -dense_length / 2],
+                                                [dense_length / 2, 0, dense_length / 2],
+                                                [sparse_length / 2, 0, -dense_length / 2],
+                                                npa * dense_length * (sparse_length - dense_length) / 2)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
 
     return np.array(centroids), np.array(normals), np.array(areas)
 
@@ -246,7 +341,7 @@ def gen_varied_slot(n=3000, H=3, W=2, length=50, depth=50, w_thresh=6, density_r
     normals.extend(p_normals)
     areas.extend(p_areas)
 
-    return centroids, normals, areas
+    return np.array(centroids), np.array(normals), np.array(areas)
 
 
 def gen_asymmetric_varied_slot(n=3000, H=3, W=2, length=50, depth=50, w_thresh=6, density_ratio=0.25,
@@ -476,7 +571,7 @@ def gen_corner(n=3000, length=25, depth=50, angle=np.pi / 2):
     normals.extend(p_normals)
     areas.extend(p_areas)
 
-    return centroids, normals, areas
+    return np.array(centroids), np.array(normals), np.array(areas)
 
 
 def gen_varied_corner(n=3000, length=25, depth=50, angle=np.pi / 2, thresh=10, density_ratio=0.5):
@@ -520,12 +615,61 @@ def gen_varied_corner(n=3000, length=25, depth=50, angle=np.pi / 2, thresh=10, d
     normals.extend(p_normals)
     areas.extend(p_areas)
 
-    return centroids, normals, areas
+    return np.array(centroids), np.array(normals), np.array(areas)
+
+
+def gen_vertical_varied_corner(n=3000, length=25, depth=50, angle=np.pi / 2, thresh=10, density_ratio=0.5):
+    """ Same as varied corner, except that the plane of symmetry is vertical. """
+    centroids = []
+    normals = []
+    areas = []
+
+    zeta = 2 * thresh / (density_ratio * 2 * (length - thresh))
+    n_dense = n * zeta / (1 + zeta)
+    n_sparse = n - n_dense
+
+    p_centroids, p_normals, p_areas = gen_plane([0, 0, - depth / 2],
+                                                [0, 0, depth / 2],
+                                                [thresh * math.sin(angle / 2), thresh * math.cos(angle / 2),
+                                                 - depth / 2],
+                                                n_dense / 2)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    p_centroids, p_normals, p_areas = gen_plane(
+        [thresh * math.sin(angle / 2), thresh * math.cos(angle / 2), - depth / 2],
+        [thresh * math.sin(angle / 2), thresh * math.cos(angle / 2), depth / 2],
+        [length * math.sin(angle / 2), length * math.cos(angle / 2), - depth / 2],
+        n_sparse / 2)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    p_centroids, p_normals, p_areas = gen_plane(
+        [- thresh * math.sin(angle / 2), thresh * math.cos(angle / 2), - depth / 2],
+        [- thresh * math.sin(angle / 2), thresh * math.cos(angle / 2), depth / 2],
+        [0, 0, - depth / 2],
+        n_dense / 2)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    p_centroids, p_normals, p_areas = gen_plane(
+        [- length * math.sin(angle / 2), length * math.cos(angle / 2), - depth / 2],
+        [- length * math.sin(angle / 2), length * math.cos(angle / 2), depth / 2],
+        [- thresh * math.sin(angle / 2), thresh * math.cos(angle / 2), - depth / 2],
+        n_sparse / 2)
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    return np.array(centroids), np.array(normals), np.array(areas)
 
 
 def gen_rectangle(n=3000, h=5, w=5, depth=50):
     """
-    Generates a rectangle with one corner at the origin.
+    Generates a rectangle with the bottom left corner at the origin.
     :param n: Requested number of control points.
     :param h: Height
     :param w: Width
@@ -584,4 +728,187 @@ def gen_rectangle(n=3000, h=5, w=5, depth=50):
     normals.extend(p_normals)
     areas.extend(p_areas)
 
-    return centroids, normals, areas
+    return np.array(centroids), np.array(normals), np.array(areas)
+
+
+def gen_triangular_prism(n, corner_1, corner_2, corner_3, depth):
+    """
+    Generates a triangular prism with corners defined anti-clockwise for inward-facing normals.
+    :param corner_1: [x, y] for corner 1
+    :param corner_2: [x, y] for corner 2
+    :param corner_3: [x, y] for corner 3
+    :param depth: Depth of the prism
+    :return: centroids, normals, areas
+    """
+    corner_1, corner_2, corner_3 = np.array(corner_1), np.array(corner_2), np.array(corner_3)
+
+    centroids = []
+    normals = []
+    areas = []
+
+    bottom_length = vect.mag(corner_2 - corner_1)
+    right_length = vect.mag(corner_3 - corner_2)
+    top_length = vect.mag(corner_1 - corner_3)
+    total_length = bottom_length + right_length + top_length
+
+    ##############################################
+    # 'Bottom' Side - corner 1 -> corner 2       #
+    ##############################################
+    p_centroids, p_normals, p_areas = gen_plane([corner_1[0], corner_1[1], - depth / 2],
+                                                [corner_1[0], corner_1[1], depth / 2],
+                                                [corner_2[0], corner_2[1], - depth / 2],
+                                                int(round(n * bottom_length / total_length)))
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    ##############################################
+    # 'Right' Side - corner 2 -> corner 3        #
+    ##############################################
+    p_centroids, p_normals, p_areas = gen_plane([corner_2[0], corner_2[1], - depth / 2],
+                                                [corner_2[0], corner_2[1], depth / 2],
+                                                [corner_3[0], corner_3[1], - depth / 2],
+                                                int(round(n * right_length / total_length)))
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    ###########################################
+    # 'Top' Side - corner 1 -> corner 2       #
+    ###########################################
+    p_centroids, p_normals, p_areas = gen_plane([corner_3[0], corner_3[1], - depth / 2],
+                                                [corner_3[0], corner_3[1], depth / 2],
+                                                [corner_1[0], corner_1[1], - depth / 2],
+                                                int(round(n * top_length / total_length)))
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    return np.array(centroids), np.array(normals), np.array(areas)
+
+
+def gen_clipped_triangular_prism(n, corner_1, corner_2, corner_3, depth, clip_fact):
+    """
+    Generates a triangular prism with corners defined anti-clockwise for inward-facing normals.
+    :param corner_1: [x, y] for corner 1
+    :param corner_2: [x, y] for corner 2
+    :param corner_3: [x, y] for corner 3
+    :param depth: Depth of the prism
+    :param clip_fact: Fraction of the corner to clip
+    :return: centroids, normals, areas
+    """
+    corner_1, corner_2, corner_3 = np.array(corner_1), np.array(corner_2), np.array(corner_3)
+
+    centroids = []
+    normals = []
+    areas = []
+
+    bottom_length = vect.mag(corner_2 - corner_1)
+    right_length = vect.mag(corner_3 - corner_2)
+    top_length = vect.mag(corner_1 - corner_3)
+    total_length = bottom_length + right_length + top_length
+
+    ##############################################
+    # 'Bottom' Side - corner 1 -> corner 2       #
+    ##############################################
+    p_centroids, p_normals, p_areas = gen_plane([corner_1[0] + (corner_2[0] - corner_1[0]) * clip_fact,
+                                                 corner_1[1] + (corner_2[1] - corner_1[1]) * clip_fact, - depth / 2],
+
+                                                [corner_1[0] + (corner_2[0] - corner_1[0]) * clip_fact,
+                                                 corner_1[1] + (corner_2[1] - corner_1[1]) * clip_fact, depth / 2],
+
+                                                [corner_2[0] - (corner_2[0] - corner_1[0]) * clip_fact,
+                                                 corner_2[1] - (corner_2[1] - corner_1[1]) * clip_fact, - depth / 2],
+                                                int(round(n * (1 - 2 * clip_fact) * bottom_length / total_length)))
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    ##############################################
+    # Corner between 'Bottom' and 'Right'        #
+    ##############################################
+    p_centroids, p_normals, p_areas = gen_plane([corner_2[0] - (corner_2[0] - corner_1[0]) * clip_fact,
+                                                 corner_2[1] - (corner_2[1] - corner_1[1]) * clip_fact, - depth / 2],
+
+                                                [corner_2[0] - (corner_2[0] - corner_1[0]) * clip_fact,
+                                                 corner_2[1] - (corner_2[1] - corner_1[1]) * clip_fact, depth / 2],
+
+                                                [corner_2[0] + (corner_3[0] - corner_2[0]) * clip_fact,
+                                                 corner_2[1] + (corner_3[1] - corner_2[1]) * clip_fact, - depth / 2],
+                                                int(round(
+                                                    n * clip_fact * (bottom_length + right_length) / total_length)))
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    ##############################################
+    # 'Right' Side - corner 2 -> corner 3        #
+    ##############################################
+    p_centroids, p_normals, p_areas = gen_plane([corner_2[0] + (corner_3[0] - corner_2[0]) * clip_fact,
+                                                 corner_2[1] + (corner_3[1] - corner_2[1]) * clip_fact, - depth / 2],
+
+                                                [corner_2[0] + (corner_3[0] - corner_2[0]) * clip_fact,
+                                                 corner_2[1] + (corner_3[1] - corner_2[1]) * clip_fact, depth / 2],
+
+                                                [corner_3[0] - (corner_3[0] - corner_2[0]) * clip_fact,
+                                                 corner_3[1] - (corner_3[1] - corner_2[1]) * clip_fact, - depth / 2],
+                                                int(round(n * (1 - 2 * clip_fact) * right_length / total_length)))
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    ##############################################
+    # Corner between 'Right' and 'Top'           #
+    ##############################################
+    p_centroids, p_normals, p_areas = gen_plane([corner_3[0] - (corner_3[0] - corner_2[0]) * clip_fact,
+                                                 corner_3[1] - (corner_3[1] - corner_2[1]) * clip_fact, - depth / 2],
+
+                                                [corner_3[0] - (corner_3[0] - corner_2[0]) * clip_fact,
+                                                 corner_3[1] - (corner_3[1] - corner_2[1]) * clip_fact, depth / 2],
+
+                                                [corner_3[0] + (corner_1[0] - corner_3[0]) * clip_fact,
+                                                 corner_3[1] + (corner_1[1] - corner_3[1]) * clip_fact, - depth / 2],
+                                                int(round(n * clip_fact * (right_length + top_length) / total_length)))
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    ###########################################
+    # 'Top' Side - corner 1 -> corner 2       #
+    ###########################################
+    p_centroids, p_normals, p_areas = gen_plane([corner_3[0] + (corner_1[0] - corner_3[0]) * clip_fact,
+                                                 corner_3[1] + (corner_1[1] - corner_3[1]) * clip_fact, - depth / 2],
+
+                                                [corner_3[0] + (corner_1[0] - corner_3[0]) * clip_fact,
+                                                 corner_3[1] + (corner_1[1] - corner_3[1]) * clip_fact, depth / 2],
+
+                                                [corner_1[0] - (corner_1[0] - corner_3[0]) * clip_fact,
+                                                 corner_1[1] - (corner_1[1] - corner_3[1]) * clip_fact, - depth / 2],
+                                                int(round(n * (1 - 2 * clip_fact) * top_length / total_length)))
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    ##############################################
+    # Corner between 'Top' and 'Bottom'          #
+    ##############################################
+    p_centroids, p_normals, p_areas = gen_plane([corner_1[0] - (corner_1[0] - corner_3[0]) * clip_fact,
+                                                 corner_1[1] - (corner_1[1] - corner_3[1]) * clip_fact, - depth / 2],
+
+                                                [corner_1[0] - (corner_1[0] - corner_3[0]) * clip_fact,
+                                                 corner_1[1] - (corner_1[1] - corner_3[1]) * clip_fact, depth / 2],
+
+                                                [corner_1[0] + (corner_2[0] - corner_1[0]) * clip_fact,
+                                                 corner_1[1] + (corner_2[1] - corner_1[1]) * clip_fact, - depth / 2],
+                                                int(round(n * clip_fact * (top_length + bottom_length) / total_length)))
+    centroids.extend(p_centroids)
+    normals.extend(p_normals)
+    areas.extend(p_areas)
+
+    return np.array(centroids), np.array(normals), np.array(areas)
+
+
+if __name__ == "__main__":
+    cs, ns, _ = gen_clipped_triangular_prism(1000, [1, 1], [0, 0], [1, 0], 2, 0.15)
+    plot_3d_point_sets([cs, cs + 0.05 * ns])
+    plt.show()

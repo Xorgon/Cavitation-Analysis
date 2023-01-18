@@ -20,6 +20,8 @@ def get_rectangle_jet_vel(x, y, length, height, k=25, m_0=1):
     return eu.get_all_vel_3d(elements, x, y, 0)
 
 
+print(get_rectangle_jet_vel(0.25, 0.25, 1, 1))
+
 w = 5
 h = 5
 r = 2
@@ -28,6 +30,9 @@ centroids, normals, areas = gen.gen_rectangle(n=n, w=w, h=h, depth=50)
 print("Requested n = {0}, using n = {1}.".format(n, len(centroids)))
 R_matrix = bem.get_R_matrix(centroids, normals, areas, dtype=np.float32)
 R_inv = np.linalg.inv(R_matrix)
+condition_number_1 = np.linalg.norm(R_inv, 1) * np.linalg.norm(R_matrix, 1)
+condition_number_inf = np.linalg.norm(R_inv, np.inf) * np.linalg.norm(R_matrix, np.inf)
+print(f"Condition numbers: 1 norm = {condition_number_1}, inf norm = {condition_number_inf}")
 # pu.plot_3d_point_sets([cs, sinks])
 
 theta_bs = np.linspace(0, 2 * math.pi, 50)

@@ -22,8 +22,8 @@ normalize = True
 m_0 = 1
 n = 20000
 
-fig_width = 3.5
-fig = plt.figure(figsize=(fig_width, 2 * fig_width / 3))
+fig_width = 5
+fig = plt.figure(figsize=(fig_width, 2 * fig_width / 4))
 
 fig.patch.set_facecolor('white')
 ax = fig.gca()

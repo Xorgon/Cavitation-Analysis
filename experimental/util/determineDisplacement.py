@@ -61,11 +61,11 @@ def makeBinary(I):
     # make a binary version of the image
     binary = I > thresh
     # try to separate small objects that are attached to the main bubble
-    morph.binary_opening(binary, selem=None, out=binary)
+    morph.binary_opening(binary, footprint=None, out=binary)
     # fill up holes to make the bright spot in the center of the bubble black
     ndimage.binary_fill_holes(binary, output=binary)
     # remove small objects (noise and object that we separated a few steps ago)
-    binary = morph.remove_small_objects(binary, min_size=256)
+    binary = morph.remove_small_objects(binary, min_size=128)
     # return the binary image
     return binary
 
@@ -119,7 +119,7 @@ def bubbleDisplacement(baseDir, movieID, laserDelay):
             xs.append(x)
             ys.append(y)
 
-    # convert the lists to numpy arrrays:
+    # convert the lists to numpy arrays:
     areas = np.array(areas)
     xs = np.array(xs)
     ys = np.array(ys)

@@ -13,13 +13,13 @@ import experimental.util.analysis_utils as au
 
 black_border = True
 
-# idxs = [37, 44, 48, 53]
-# repeats = [5, 0, 0, 3]
-# frame_idxs = [45, 43, 42, 49]
+idxs = [37, 44, 48, 53]
+repeats = [5, 0, 0, 3]
+frame_idxs = [45, 43, 42, 49]
 
-idxs = range(1, 54)
-repeats = [None for idx in idxs]
-frame_idxs = [0] * len(idxs)
+# idxs = range(1, 54)
+# repeats = [0 for idx in idxs]
+# frame_idxs = [0] * len(idxs)
 
 scale = 2
 

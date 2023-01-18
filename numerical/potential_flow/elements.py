@@ -169,7 +169,9 @@ class Dipole3D(Element3D):
 
 
 if __name__ == '__main__':
-    elements = [Dipole3D([0, -1, 0], [1, 0, 0], 1),
-                Source3D(0, 1, 0, -100)]
-    pfp.plot_elements(elements, x_bounds=(-10, 10), y_bounds=(-10, 10), pivot='tail', unit_arrows=True, x_points=30,
+    elements = [Dipole3D([0, 0, 0], [1, 0, 0], 1),
+                Source3D(0, 0, 0, -100)]
+    # pfp.plot_elements(elements, x_bounds=(-10, 10), y_bounds=(-10, 10), pivot='mid', unit_arrows=False, x_points=30,
+    #                   y_points=30, mask_points=[[0, 0]], mask_radii=[1.5])
+    pfp.plot_elements(elements, x_bounds=(-5, 5), y_bounds=(-5, 5), pivot='mid', unit_arrows=True, x_points=30,
                       y_points=30)

@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
         color = colors[color_idx]
         color_idx += 1
-        theta_j_sweeps[label] = [theta_bs, [], [], color, corner_angle]  # theta_bs, theta_j numerical, theta_j Peters
+        theta_j_sweeps[label] = [theta_bs, [], [], color, corner_angle, condition_number_inf]  # theta_bs, theta_j numerical, theta_j Peters
         for theta_b in theta_bs:
             print("    theta_b =", theta_b)
             x = dist * math.cos(theta_b)
@@ -95,6 +95,9 @@ if __name__ == "__main__":
             # Numerical theta_j
             R_b = bem.get_R_vector([x, y, 0], centroids, normals)
             res_vel, sigma = bem.get_jet_dir_and_sigma([x, y, 0], centroids, normals, areas, m_0, R_inv=R_inv, R_b=R_b)
+
+            # pu.plot_3d_point_sets([centroids], [sigma], colorbar=True)
+
             print("        max_res =", np.max(np.abs(R_b + np.dot(R_matrix, sigma))))
             sigma_and_bubble = np.append(sigma, 1)
             theta_j_sweeps[label][1].append(vel_to_angle(res_vel))
@@ -112,7 +115,8 @@ if __name__ == "__main__":
     legend_elements = [Line2D([0], [0], color='k', label="Analytic"),
                        Line2D([0], [0], color='k', marker='o', linestyle="--", label="Numeric")]
     for label in sorted(theta_j_sweeps.keys()):
-        legend_elements.append(Line2D([0], [0], color=theta_j_sweeps[label][3], label=label))
+        inf_norm_symbol = "||\\mathsfbi{R}||_\\infty"
+        legend_elements.append(Line2D([0], [0], color=theta_j_sweeps[label][3], label=f"{label}, ${inf_norm_symbol} = {theta_j_sweeps[label][5]:.1f}$"))
         ax.plot(theta_j_sweeps[label][0], theta_j_sweeps[label][1], theta_j_sweeps[label][3] + "o--", markersize=3)
         ax.plot(theta_j_sweeps[label][0], theta_j_sweeps[label][2], theta_j_sweeps[label][3])
         if not normalize:
@@ -120,5 +124,6 @@ if __name__ == "__main__":
     ax.axhline(0, color="gray", linestyle="--")
     ax.set_xlabel("$\\theta_b$", fontsize=18)
     ax.set_ylabel("$\\theta_j$", fontsize=18)
-    ax.legend(handles=legend_elements, loc=4)
+    ax.legend(handles=legend_elements, loc=4, frameon=False)
+    plt.tight_layout()
     plt.show()

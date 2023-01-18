@@ -3,9 +3,9 @@ from experimental.plotting.analyse_slot import analyse_slot
 import itertools
 import common.util.plotting_utils as plt_util
 
-num_cols = 2
-num_rows = 2
-num_plots = 4
+num_cols = 3
+num_rows = 3
+num_plots = 7
 
 plt_util.initialize_plt(line_scale=0.5, capsize=1.5)
 
@@ -25,9 +25,9 @@ config = {
     "plot_predicted": False
 }
 
-config["use_all_series"] = False
-config["colours"] = False
-config["plot_predicted"] = True
+# config["use_all_series"] = False
+# config["colours"] = False
+# config["plot_predicted"] = True
 
 fig_width = 5.31445  # From LaTeX
 
